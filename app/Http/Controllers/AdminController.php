@@ -1,5 +1,5 @@
 <?php
-// app/Http/Controllers/AdminController.php - Updated with new features
+// app/Http/Controllers/AdminController.php - Fixed version
 namespace App\Http\Controllers;
 
 use App\Models\User;
@@ -17,18 +17,16 @@ use Illuminate\Support\Str;
 
 class AdminController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(function ($request, $next) {
-            if (!auth()->user()->isAdmin()) {
-                abort(403, 'Unauthorized access');
-            }
-            return $next($request);
-        });
-    }
-
+    // Remove the problematic constructor
+    // Laravel 11 handles middleware differently
+    
     public function dashboard()
     {
+        // Check admin authorization at the top
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Unauthorized access');
+        }
+        
         $stats = [
             'total_users' => User::count(),
             'total_resellers' => User::where('user_type', 'reseller')->count(),
@@ -55,12 +53,14 @@ class AdminController extends Controller
 
     public function users()
     {
+        $this->checkAdminAuth();
         $users = User::latest()->paginate(20);
         return view('admin.users', compact('users'));
     }
 
     public function payments()
     {
+        $this->checkAdminAuth();
         $payments = PaymentRequest::with('user')
             ->latest()
             ->paginate(20);
@@ -70,6 +70,8 @@ class AdminController extends Controller
 
     public function approvePayment(PaymentRequest $payment)
     {
+        $this->checkAdminAuth();
+        
         if ($payment->status !== 'pending') {
             return redirect()->back()->with('error', 'Payment already processed');
         }
@@ -84,6 +86,7 @@ class AdminController extends Controller
 
         $payment->update([
             'status' => 'approved',
+            'approved_at' => now(),
         ]);
 
         // Record transaction
@@ -102,6 +105,8 @@ class AdminController extends Controller
 
     public function rejectPayment(Request $request, PaymentRequest $payment)
     {
+        $this->checkAdminAuth();
+        
         $request->validate([
             'admin_notes' => 'required|string|max:500',
         ]);
@@ -116,6 +121,8 @@ class AdminController extends Controller
 
     public function adjustCredits(Request $request, User $user)
     {
+        $this->checkAdminAuth();
+        
         $request->validate([
             'credits' => 'required|numeric',
             'type' => 'required|in:add,subtract',
@@ -147,6 +154,8 @@ class AdminController extends Controller
 
     public function packages()
     {
+        $this->checkAdminAuth();
+        
         $packages = [
             (object) ['id' => 1, 'name' => 'Starter', 'credits' => 5, 'price' => 1000, 'discount' => 0],
             (object) ['id' => 2, 'name' => 'Standard', 'credits' => 10, 'price' => 2000, 'discount' => 10],
@@ -158,6 +167,8 @@ class AdminController extends Controller
 
     public function matches()
     {
+        $this->checkAdminAuth();
+        
         $matches = FootballMatch::with('user')
             ->latest()
             ->paginate(20);
@@ -165,20 +176,24 @@ class AdminController extends Controller
         return view('admin.matches', compact('matches'));
     }
 
-    
     public function resellerApplications()
     {
+        $this->checkAdminAuth();
+        
         $applications = ResellerApplication::with('user')->latest()->paginate(20);
         return view('admin.reseller-applications', compact('applications'));
     }
 
     public function viewApplication(ResellerApplication $application)
     {
+        $this->checkAdminAuth();
         return view('admin.view-application', compact('application'));
     }
 
     public function approveApplication(ResellerApplication $application)
     {
+        $this->checkAdminAuth();
+        
         if ($application->status !== 'pending') {
             return redirect()->back()->with('error', 'Application already processed');
         }
@@ -206,6 +221,8 @@ class AdminController extends Controller
 
     public function commissions()
     {
+        $this->checkAdminAuth();
+        
         $commissions = CommissionPayment::with('reseller', 'customer', 'paymentRequest')
             ->latest()
             ->paginate(20);
@@ -215,12 +232,16 @@ class AdminController extends Controller
 
     public function overlayThemes()
     {
+        $this->checkAdminAuth();
+        
         $themes = OverlayTheme::latest()->paginate(20);
         return view('admin.overlay-themes', compact('themes'));
     }
 
     public function storeTheme(Request $request)
     {
+        $this->checkAdminAuth();
+        
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'required|string',
@@ -259,15 +280,17 @@ class AdminController extends Controller
 
         return redirect()->route('admin.themes')->with('success', 'Theme created successfully');
     }
- 
 
     public function systemSettings()
     {
+        $this->checkAdminAuth();
         return view('admin.system-settings');
     }
 
     public function bulkActions(Request $request)
     {
+        $this->checkAdminAuth();
+        
         $request->validate([
             'action' => 'required|in:approve_payments,reject_payments,send_notifications',
             'ids' => 'required|array',
@@ -287,6 +310,14 @@ class AdminController extends Controller
         }
 
         return redirect()->back()->with('success', 'Bulk action completed successfully');
+    }
+
+    // Helper method to check admin authorization
+    private function checkAdminAuth()
+    {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'Unauthorized access');
+        }
     }
 
     private function bulkApprovePayments($ids)
@@ -316,7 +347,7 @@ class AdminController extends Controller
         
         foreach ($users as $user) {
             // Send notification (implement your notification system)
-             //UserActivityLog::log($user->id, 'admin_notification', $message);
+            // UserActivityLog::log($user->id, 'admin_notification', $message);
         }
     }
 }

@@ -8,11 +8,12 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ResellerController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\OverlayThemeController;
+use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
+// ===== PUBLIC ROUTES =====
 
-
-// Public Routes
+// Landing Page
 Route::get('/', function () {
     return view('welcome');
 });
@@ -20,20 +21,26 @@ Route::get('/', function () {
 // Public overlay route (no auth required)
 Route::get('/overlay/{token}', [OverlayController::class, 'show'])->name('overlay.show');
 
+// Public API for overlay data
 Route::get('/api/overlay-data/{match}', [OverlayController::class, 'getOverlayData']);
+
+// Special referral registration route
+Route::get('/register', function () {
+    $referralCode = request()->get('ref');
+    return view('auth.register', compact('referralCode'));
+})->name('register');
 
 // Authentication Routes (Laravel Breeze)
 require __DIR__.'/auth.php';
 
-// Authenticated Routes
+// ===== AUTHENTICATED ROUTES =====
+
 Route::middleware(['auth', 'verified'])->group(function () {
     
-    // ===== PHASE 1 ROUTES =====
-    
-    // Dashboard
+    // ===== DASHBOARD =====
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
-    // Match Management Routes
+    // ===== MATCH MANAGEMENT =====
     Route::prefix('matches')->name('matches.')->group(function () {
         Route::get('/', [MatchController::class, 'index'])->name('index');
         Route::get('/create', [MatchController::class, 'create'])->name('create');
@@ -56,9 +63,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Overlay Management
         Route::get('/{match}/generate-overlay-link', [MatchController::class, 'generateOverlayLink'])->name('generate-overlay-link');
         Route::post('/{match}/regenerate-overlay', [MatchController::class, 'regenerateOverlay'])->name('regenerate-overlay');
+        
+        // Match Analytics
+        Route::get('/{match}/analytics', [MatchController::class, 'analytics'])->name('analytics');
+        
+        // Match Export
+        Route::get('/{match}/export', [MatchController::class, 'export'])->name('export');
+        Route::get('/{match}/export/pdf', [MatchController::class, 'exportPdf'])->name('export-pdf');
+        Route::get('/{match}/export/csv', [MatchController::class, 'exportCsv'])->name('export-csv');
+        
+        // Match Sharing
+        Route::post('/{match}/share', [MatchController::class, 'share'])->name('share');
+        Route::get('/{match}/share-stats', [MatchController::class, 'shareStats'])->name('share-stats');
     });
     
-    // Credit Management Routes
+    // ===== CREDIT MANAGEMENT =====
     Route::prefix('credits')->name('credits.')->group(function () {
         Route::get('/purchase', [CreditController::class, 'purchase'])->name('purchase');
         Route::post('/submit-payment', [CreditController::class, 'submitPayment'])->name('submit-payment');
@@ -66,11 +85,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/payment-history', [CreditController::class, 'paymentHistory'])->name('payment-history');
         Route::get('/balance', [CreditController::class, 'balance'])->name('balance');
         Route::post('/cancel-payment/{payment}', [CreditController::class, 'cancelPayment'])->name('cancel-payment');
+        Route::get('/usage-stats', [CreditController::class, 'usageStats'])->name('usage-stats');
+        Route::get('/packages', [CreditController::class, 'packages'])->name('packages');
     });
     
-    // ===== PHASE 2 ROUTES =====
-    
-    // Reseller System Routes
+    // ===== RESELLER SYSTEM =====
     Route::prefix('reseller')->name('reseller.')->group(function () {
         // Application Process
         Route::get('/apply', [ResellerController::class, 'apply'])->name('apply');
@@ -104,7 +123,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
     });
     
-    // Analytics Routes
+    // ===== ANALYTICS =====
     Route::prefix('analytics')->name('analytics.')->group(function () {
         Route::get('/dashboard', [AnalyticsController::class, 'dashboard'])->name('dashboard');
         Route::get('/match/{match}', [AnalyticsController::class, 'matchDetails'])->name('match-details');
@@ -124,7 +143,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
     });
     
-    // Overlay Theme Routes
+    // ===== OVERLAY THEMES =====
     Route::prefix('themes')->name('themes.')->group(function () {
         Route::get('/', [OverlayThemeController::class, 'index'])->name('index');
         Route::get('/{theme}', [OverlayThemeController::class, 'show'])->name('show');
@@ -141,7 +160,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/unlock-premium', [OverlayThemeController::class, 'unlockPremium'])->name('unlock-premium');
     });
     
-    // User Profile Routes
+    // ===== USER PROFILE =====
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('edit');
         Route::patch('/', [ProfileController::class, 'update'])->name('update');
@@ -149,17 +168,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/settings', [ProfileController::class, 'settings'])->name('settings');
         Route::post('/settings', [ProfileController::class, 'updateSettings'])->name('update-settings');
         Route::get('/activity', [ProfileController::class, 'activity'])->name('activity');
+        Route::post('/upload-avatar', [ProfileController::class, 'uploadAvatar'])->name('upload-avatar');
     });
     
-    // Notification Routes
+    // ===== NOTIFICATIONS =====
     Route::prefix('notifications')->name('notifications.')->group(function () {
         Route::get('/', [NotificationController::class, 'index'])->name('index');
         Route::post('/{notification}/read', [NotificationController::class, 'markAsRead'])->name('mark-as-read');
         Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
         Route::delete('/{notification}', [NotificationController::class, 'destroy'])->name('destroy');
+        Route::get('/settings', [NotificationController::class, 'settings'])->name('settings');
+        Route::post('/settings', [NotificationController::class, 'updateSettings'])->name('update-settings');
     });
     
-    // Support Routes
+    // ===== SUPPORT SYSTEM =====
     Route::prefix('support')->name('support.')->group(function () {
         Route::get('/', [SupportController::class, 'index'])->name('index');
         Route::get('/create', [SupportController::class, 'create'])->name('create');
@@ -167,15 +189,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{ticket}', [SupportController::class, 'show'])->name('show');
         Route::post('/{ticket}/reply', [SupportController::class, 'reply'])->name('reply');
         Route::post('/{ticket}/close', [SupportController::class, 'close'])->name('close');
+        Route::get('/faq', [SupportController::class, 'faq'])->name('faq');
+        Route::post('/feedback', [SupportController::class, 'feedback'])->name('feedback');
+    });
+    
+    // ===== SEARCH =====
+    Route::prefix('search')->name('search.')->group(function () {
+        Route::get('/matches', [SearchController::class, 'matches'])->name('matches');
+        Route::get('/users', [SearchController::class, 'users'])->name('users');
+        Route::get('/themes', [SearchController::class, 'themes'])->name('themes');
+        Route::get('/global', [SearchController::class, 'global'])->name('global');
+        Route::get('/suggestions', [SearchController::class, 'suggestions'])->name('suggestions');
     });
     
     // ===== ADMIN ROUTES =====
-    
     Route::middleware(['admin'])->prefix('admin')->name('admin.')->group(function () {
-        // Admin Dashboard
+        
+        // ===== ADMIN DASHBOARD =====
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
         
-        // User Management
+        // ===== USER MANAGEMENT =====
         Route::prefix('users')->name('users.')->group(function () {
             Route::get('/', [AdminController::class, 'users'])->name('index');
             Route::get('/create', [AdminController::class, 'createUser'])->name('create');
@@ -190,17 +223,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/{user}/activity', [AdminController::class, 'userActivity'])->name('activity');
         });
         
-        // Payment Management
+        // ===== PAYMENT MANAGEMENT =====
         Route::prefix('payments')->name('payments.')->group(function () {
             Route::get('/', [AdminController::class, 'payments'])->name('index');
             Route::get('/{payment}', [AdminController::class, 'showPayment'])->name('show');
             Route::post('/{payment}/approve', [AdminController::class, 'approvePayment'])->name('approve');
             Route::post('/{payment}/reject', [AdminController::class, 'rejectPayment'])->name('reject');
             Route::get('/bulk-approve', [AdminController::class, 'bulkApprove'])->name('bulk-approve');
-            Route::post('/bulk-actions', [AdminController::class, 'bulkActions'])->name('bulk-actions');
         });
         
-        // Credit Package Management
+        // ===== CREDIT PACKAGE MANAGEMENT =====
         Route::prefix('packages')->name('packages.')->group(function () {
             Route::get('/', [AdminController::class, 'packages'])->name('index');
             Route::get('/create', [AdminController::class, 'createPackage'])->name('create');
@@ -212,7 +244,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/{package}/toggle-status', [AdminController::class, 'togglePackageStatus'])->name('toggle-status');
         });
         
-        // Match Management
+        // ===== MATCH MANAGEMENT =====
         Route::prefix('matches')->name('matches.')->group(function () {
             Route::get('/', [AdminController::class, 'matches'])->name('index');
             Route::get('/{match}', [AdminController::class, 'showMatch'])->name('show');
@@ -221,7 +253,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/analytics/overview', [AdminController::class, 'matchAnalytics'])->name('analytics');
         });
         
-        // Reseller Management (Phase 2)
+        // ===== RESELLER MANAGEMENT =====
         Route::prefix('resellers')->name('resellers.')->group(function () {
             Route::get('/', [AdminController::class, 'resellers'])->name('index');
             Route::get('/applications', [AdminController::class, 'resellerApplications'])->name('applications');
@@ -235,7 +267,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/{reseller}/commissions', [AdminController::class, 'resellerCommissions'])->name('commissions');
         });
         
-        // Commission Management (Phase 2)
+        // ===== COMMISSION MANAGEMENT =====
         Route::prefix('commissions')->name('commissions.')->group(function () {
             Route::get('/', [AdminController::class, 'commissions'])->name('index');
             Route::get('/tiers', [AdminController::class, 'commissionTiers'])->name('tiers');
@@ -251,7 +283,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/payouts/{payout}/reject', [AdminController::class, 'rejectPayout'])->name('reject-payout');
         });
         
-        // Theme Management (Phase 2)
+        // ===== THEME MANAGEMENT =====
         Route::prefix('themes')->name('themes.')->group(function () {
             Route::get('/', [AdminController::class, 'overlayThemes'])->name('index');
             Route::get('/create', [AdminController::class, 'createTheme'])->name('create');
@@ -265,7 +297,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/{theme}/usage-stats', [AdminController::class, 'themeUsageStats'])->name('usage-stats');
         });
         
-        // System Settings
+        // ===== SYSTEM SETTINGS =====
         Route::prefix('settings')->name('settings.')->group(function () {
             Route::get('/', [AdminController::class, 'systemSettings'])->name('index');
             Route::post('/', [AdminController::class, 'updateSettings'])->name('update');
@@ -273,9 +305,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/cache/clear', [AdminController::class, 'clearCache'])->name('clear-cache');
             Route::get('/backup', [AdminController::class, 'backupSettings'])->name('backup');
             Route::post('/backup/create', [AdminController::class, 'createBackup'])->name('create-backup');
+            Route::get('/maintenance', [AdminController::class, 'maintenanceMode'])->name('maintenance');
+            Route::post('/maintenance/toggle', [AdminController::class, 'toggleMaintenance'])->name('toggle-maintenance');
         });
         
-        // Analytics & Reports
+        // ===== ANALYTICS & REPORTS =====
         Route::prefix('analytics')->name('analytics.')->group(function () {
             Route::get('/revenue', [AdminController::class, 'revenueAnalytics'])->name('revenue');
             Route::get('/users', [AdminController::class, 'userAnalytics'])->name('users');
@@ -283,18 +317,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/resellers', [AdminController::class, 'resellerAnalytics'])->name('resellers');
             Route::get('/themes', [AdminController::class, 'themeAnalytics'])->name('themes');
             Route::get('/export', [AdminController::class, 'exportAnalytics'])->name('export');
+            Route::get('/real-time', [AdminController::class, 'realTimeAnalytics'])->name('real-time');
         });
         
-        // System Monitoring
+        // ===== SYSTEM MONITORING =====
         Route::prefix('monitoring')->name('monitoring.')->group(function () {
             Route::get('/system-health', [AdminController::class, 'systemHealth'])->name('system-health');
             Route::get('/error-logs', [AdminController::class, 'errorLogs'])->name('error-logs');
             Route::get('/user-activity', [AdminController::class, 'userActivityLogs'])->name('user-activity');
             Route::get('/api-usage', [AdminController::class, 'apiUsage'])->name('api-usage');
             Route::get('/database-stats', [AdminController::class, 'databaseStats'])->name('database-stats');
+            Route::get('/server-stats', [AdminController::class, 'serverStats'])->name('server-stats');
         });
         
-        // Bulk Operations
+        // ===== BULK OPERATIONS =====
         Route::prefix('bulk')->name('bulk.')->group(function () {
             Route::get('/operations', [AdminController::class, 'bulkOperations'])->name('operations');
             Route::post('/send-notifications', [AdminController::class, 'bulkSendNotifications'])->name('send-notifications');
@@ -304,7 +340,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/reject-payments', [AdminController::class, 'bulkRejectPayments'])->name('reject-payments');
         });
         
-        // Import/Export
+        // ===== IMPORT/EXPORT =====
         Route::prefix('import-export')->name('import-export.')->group(function () {
             Route::get('/', [AdminController::class, 'importExport'])->name('index');
             Route::post('/import-users', [AdminController::class, 'importUsers'])->name('import-users');
@@ -312,58 +348,82 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/export-matches', [AdminController::class, 'exportMatches'])->name('export-matches');
             Route::get('/export-payments', [AdminController::class, 'exportPayments'])->name('export-payments');
             Route::get('/export-commissions', [AdminController::class, 'exportCommissions'])->name('export-commissions');
+            Route::get('/export-analytics', [AdminController::class, 'exportAnalytics'])->name('export-analytics');
         });
+        
+        // ===== BULK ACTIONS (General) =====
+        Route::post('/bulk-actions', [AdminController::class, 'bulkActions'])->name('bulk-actions');
     });
 });
 
 // ===== AJAX ROUTES =====
-
-// AJAX routes for real-time updates (no middleware needed for some)
 Route::prefix('ajax')->name('ajax.')->group(function () {
     Route::middleware(['auth'])->group(function () {
         Route::get('/user-balance', [AjaxController::class, 'userBalance'])->name('user-balance');
         Route::get('/match-status/{match}', [AjaxController::class, 'matchStatus'])->name('match-status');
         Route::get('/notifications', [AjaxController::class, 'notifications'])->name('notifications');
         Route::post('/mark-notification-read/{notification}', [AjaxController::class, 'markNotificationRead'])->name('mark-notification-read');
+        Route::get('/search', [AjaxController::class, 'search'])->name('search');
+        Route::get('/user-suggestions', [AjaxController::class, 'userSuggestions'])->name('user-suggestions');
     });
 });
 
 // ===== WEBHOOK ROUTES =====
-
-// Webhook routes for payment gateways
 Route::prefix('webhooks')->name('webhooks.')->group(function () {
     Route::post('/bkash', [WebhookController::class, 'bkash'])->name('bkash');
     Route::post('/nagad', [WebhookController::class, 'nagad'])->name('nagad');
     Route::post('/rocket', [WebhookController::class, 'rocket'])->name('rocket');
     Route::post('/stripe', [WebhookController::class, 'stripe'])->name('stripe');
+    Route::post('/paypal', [WebhookController::class, 'paypal'])->name('paypal');
+    Route::post('/razorpay', [WebhookController::class, 'razorpay'])->name('razorpay');
 });
 
 // ===== CRON JOB ROUTES =====
-
-// Routes for scheduled tasks
 Route::prefix('cron')->name('cron.')->group(function () {
     Route::get('/calculate-commissions', [CronController::class, 'calculateCommissions'])->name('calculate-commissions');
     Route::get('/cleanup-expired-tokens', [CronController::class, 'cleanupExpiredTokens'])->name('cleanup-expired-tokens');
     Route::get('/send-daily-reports', [CronController::class, 'sendDailyReports'])->name('send-daily-reports');
     Route::get('/backup-database', [CronController::class, 'backupDatabase'])->name('backup-database');
+    Route::get('/cleanup-old-logs', [CronController::class, 'cleanupOldLogs'])->name('cleanup-old-logs');
+    Route::get('/send-weekly-reports', [CronController::class, 'sendWeeklyReports'])->name('send-weekly-reports');
+    Route::get('/update-analytics', [CronController::class, 'updateAnalytics'])->name('update-analytics');
 });
 
-// ===== REFERRAL ROUTES =====
-
-// Special referral registration route
-Route::get('/register', function () {
-    $referralCode = request()->get('ref');
-    return view('auth.register', compact('referralCode'));
-})->name('register');
-
 // ===== SITEMAP & SEO ROUTES =====
-
 Route::get('/sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 Route::get('/robots.txt', [SitemapController::class, 'robots'])->name('robots');
+Route::get('/manifest.json', [SitemapController::class, 'manifest'])->name('manifest');
+
+// ===== HEALTH CHECK ROUTES =====
+Route::get('/health', [HealthController::class, 'check'])->name('health');
+Route::get('/status', [HealthController::class, 'status'])->name('status');
+
+// ===== TESTING ROUTES (Development Only) =====
+if (app()->environment(['local', 'testing'])) {
+    Route::prefix('test')->name('test.')->group(function () {
+        Route::get('/email', [TestController::class, 'email'])->name('email');
+        Route::get('/notification', [TestController::class, 'notification'])->name('notification');
+        Route::get('/broadcast', [TestController::class, 'broadcast'])->name('broadcast');
+        Route::get('/queue', [TestController::class, 'queue'])->name('queue');
+        Route::get('/cache', [TestController::class, 'cache'])->name('cache');
+        Route::get('/database', [TestController::class, 'database'])->name('database');
+        Route::get('/storage', [TestController::class, 'storage'])->name('storage');
+    });
+}
+
+// ===== MAINTENANCE MODE ROUTES =====
+Route::get('/maintenance', function () {
+    return view('maintenance');
+})->name('maintenance');
 
 // ===== FALLBACK ROUTES =====
-
-// 404 fallback
 Route::fallback(function () {
     return response()->view('errors.404', [], 404);
 });
+
+// ===== EMERGENCY ADMIN ACCESS =====
+if (app()->environment('local')) {
+    Route::get('/emergency-admin/{token}', [EmergencyController::class, 'adminAccess'])
+        ->name('emergency.admin')
+        ->where('token', '[a-zA-Z0-9]+');
+}
