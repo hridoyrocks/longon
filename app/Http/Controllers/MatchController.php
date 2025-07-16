@@ -1,10 +1,14 @@
 <?php
+// app/Http/Controllers/MatchController.php - Fixed with Broadcasting
+
 namespace App\Http\Controllers;
 
 use App\Models\FootballMatch;
 use App\Models\MatchEvent;
 use App\Models\CreditTransaction;
 use App\Models\OverlayToken;
+use App\Events\MatchUpdated;
+use App\Events\MatchEventAdded;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -92,12 +96,30 @@ class MatchController extends Controller
             'team_b_score' => 'required|integer|min:0',
         ]);
 
+        $oldScoreA = $match->team_a_score;
+        $oldScoreB = $match->team_b_score;
+
         $match->update([
             'team_a_score' => $request->team_a_score,
             'team_b_score' => $request->team_b_score,
         ]);
 
-        return response()->json(['success' => true]);
+        // Determine update type for enhanced animations
+        $updateType = 'score';
+        if ($request->team_a_score > $oldScoreA) {
+            $updateType = 'goal_team_a';
+        } elseif ($request->team_b_score > $oldScoreB) {
+            $updateType = 'goal_team_b';
+        }
+
+        // Fire the event to broadcast
+        event(new MatchUpdated($match, $updateType));
+
+        return response()->json([
+            'success' => true,
+            'update_type' => $updateType,
+            'message' => 'Score updated and broadcasted'
+        ]);
     }
 
     public function updateTime(Request $request, FootballMatch $match)
@@ -108,14 +130,20 @@ class MatchController extends Controller
         }
 
         $request->validate([
-            'match_time' => 'required|integer|min:0',
+            'match_time' => 'required|numeric|min:0',
         ]);
 
         $match->update([
             'match_time' => $request->match_time,
         ]);
 
-        return response()->json(['success' => true]);
+        // Fire the event to broadcast
+        event(new MatchUpdated($match, 'time'));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Time updated and broadcasted'
+        ]);
     }
 
     public function updateStatus(Request $request, FootballMatch $match)
@@ -129,13 +157,28 @@ class MatchController extends Controller
             'status' => 'required|in:pending,live,finished',
         ]);
 
-        $match->update([
-            'status' => $request->status,
-            'started_at' => $request->status === 'live' ? now() : $match->started_at,
-            'finished_at' => $request->status === 'finished' ? now() : null,
-        ]);
+        $oldStatus = $match->status;
 
-        return response()->json(['success' => true]);
+        $updateData = [
+            'status' => $request->status,
+        ];
+
+        // Set timestamps based on status
+        if ($request->status === 'live' && $oldStatus !== 'live') {
+            $updateData['started_at'] = now();
+        } elseif ($request->status === 'finished') {
+            $updateData['finished_at'] = now();
+        }
+
+        $match->update($updateData);
+
+        // Fire the event to broadcast
+        event(new MatchUpdated($match, 'status'));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status updated and broadcasted'
+        ]);
     }
 
     public function addEvent(Request $request, FootballMatch $match)
@@ -162,7 +205,14 @@ class MatchController extends Controller
             'description' => $request->description,
         ]);
 
-        return response()->json(['success' => true, 'event' => $event]);
+        // Fire the event to broadcast
+        event(new MatchEventAdded($event));
+
+        return response()->json([
+            'success' => true,
+            'event' => $event,
+            'message' => 'Event added and broadcasted'
+        ]);
     }
 
     public function generateOverlayLink(FootballMatch $match)
@@ -182,6 +232,9 @@ class MatchController extends Controller
 
         $overlayUrl = route('overlay.show', $token);
 
-        return response()->json(['overlay_url' => $overlayUrl]);
+        return response()->json([
+            'overlay_url' => $overlayUrl,
+            'success' => true
+        ]);
     }
 }

@@ -1,3 +1,4 @@
+{{-- resources/views/overlay/show.blade.php --}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,10 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Football Scoreboard Overlay</title>
     
-    <!-- Bangla Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
         * {
@@ -21,55 +20,60 @@
             font-family: 'Inter', 'Hind Siliguri', sans-serif;
             background: transparent;
             overflow: hidden;
+            user-select: none;
         }
 
         .bangla-text {
             font-family: 'Hind Siliguri', sans-serif;
         }
 
-        /* Main Scoreboard Container */
+        /* Enhanced Scoreboard Container */
         .scoreboard {
             position: fixed;
-            top: 20px;
+            top: 25px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             align-items: stretch;
-            height: 60px;
+            height: 70px;
             z-index: 1000;
-            animation: slideDown 0.8s ease-out;
-            filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3));
-            width: 80vw;
-            min-width: 600px;
-            max-width: 1200px;
-            background: linear-gradient(135deg, #0f172a, #1e293b);
-            border-radius: 6px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: slideDown 1s ease-out;
+            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.4));
+            width: 85vw;
+            min-width: 700px;
+            max-width: 1400px;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 0 60px rgba(0, 255, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
 
         @keyframes slideDown {
             from {
                 opacity: 0;
-                transform: translateX(-50%) translateY(-40px);
+                transform: translateX(-50%) translateY(-50px) scale(0.9);
             }
             to {
                 opacity: 1;
-                transform: translateX(-50%) translateY(0);
+                transform: translateX(-50%) translateY(0) scale(1);
             }
         }
 
         /* Team Sections */
         .team-section {
-            background: linear-gradient(135deg, #1e40af, #1d4ed8);
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6, #1e3a8a);
             color: white;
-            padding: 0 30px;
+            padding: 0 35px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: clamp(22px, 3vw, 28px);
-            font-weight: 700;
+            font-size: clamp(20px, 2.8vw, 26px);
+            font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.8px;
+            letter-spacing: 1px;
             flex: 1;
             min-width: 0;
             position: relative;
@@ -77,112 +81,156 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            transition: all 0.3s ease;
-            border-top: 2px solid #3b82f6;
-            border-bottom: 2px solid #3b82f6;
+            transition: all 0.4s ease;
+            border-top: 3px solid #60a5fa;
+            border-bottom: 3px solid #60a5fa;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         .team-section.home {
-            border-left: 2px solid #3b82f6;
-            border-radius: 4px 0 0 4px;
+            border-left: 3px solid #60a5fa;
+            border-radius: 6px 0 0 6px;
+            background: linear-gradient(135deg, #dc2626, #ef4444, #dc2626);
         }
 
         .team-section.away {
-            border-right: 2px solid #3b82f6;
-            border-radius: 0 4px 4px 0;
+            border-right: 3px solid #60a5fa;
+            border-radius: 0 6px 6px 0;
+            background: linear-gradient(135deg, #059669, #10b981, #059669);
         }
 
         /* Score Section */
         .score-section {
-            background: linear-gradient(135deg, #111827, #1f2937);
+            background: linear-gradient(135deg, #000000, #1f1f1f, #000000);
             color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(36px, 5vw, 48px);
+            font-weight: 900;
+            min-width: 160px;
+            width: 160px;
+            position: relative;
+            flex-shrink: 0;
+            border: 3px solid #374151;
+            font-feature-settings: 'tnum';
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        .score-display {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: clamp(32px, 4.5vw, 40px);
-            font-weight: 900;
-            min-width: 120px;
-            width: 120px;
-            position: relative;
-            flex-shrink: 0;
-            border: 2px solid #374151;
-            font-feature-settings: 'tnum';
+            gap: 15px;
         }
 
         .score {
-            transition: all 0.4s ease;
+            transition: all 0.5s ease;
             font-family: 'Inter', monospace;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
         }
 
         .score.updated {
-            animation: scoreUpdate 0.6s ease;
+            animation: scoreUpdate 0.8s ease;
         }
 
         @keyframes scoreUpdate {
-            0% { transform: scale(1); color: white; }
-            50% { transform: scale(1.2); color: #fbbf24; }
-            100% { transform: scale(1); color: white; }
+            0% { 
+                transform: scale(1); 
+                color: white; 
+            }
+            25% { 
+                transform: scale(1.3); 
+                color: #fbbf24; 
+            }
+            50% { 
+                transform: scale(1.1); 
+                color: #22c55e; 
+            }
+            100% { 
+                transform: scale(1); 
+                color: white; 
+            }
         }
 
         .score-divider {
-            margin: 0 8px;
-            font-size: clamp(24px, 3.5vw, 28px);
-            color: #6b7280;
+            font-size: clamp(28px, 4vw, 36px);
+            color: #9ca3af;
             font-weight: 400;
         }
 
-        /* Live indicator */
+        /* Timer Section */
+        .timer-section {
+            background: linear-gradient(135deg, #7c2d12, #dc2626, #7c2d12);
+            color: white;
+            padding: 8px 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(14px, 1.8vw, 18px);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            border-radius: 0 0 6px 6px;
+            position: absolute;
+            bottom: -35px;
+            left: 50%;
+            transform: translateX(-50%);
+            min-width: 120px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .timer-display {
+            font-family: 'Inter', monospace;
+            font-size: clamp(16px, 2vw, 20px);
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Live Indicator */
         .live-indicator {
             position: absolute;
-            top: -8px;
-            right: 15px;
-            background: #dc2626;
+            top: -12px;
+            right: 20px;
+            background: linear-gradient(135deg, #dc2626, #ef4444);
             color: white;
-            padding: 4px 10px;
-            border-radius: 3px;
-            font-size: clamp(9px, 1.2vw, 11px);
-            font-weight: 600;
+            padding: 6px 15px;
+            border-radius: 6px;
+            font-size: clamp(10px, 1.4vw, 12px);
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
             animation: livePulse 2s infinite;
             z-index: 10;
-            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
+            box-shadow: 
+                0 4px 15px rgba(220, 38, 38, 0.4),
+                0 0 20px rgba(220, 38, 38, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
         }
 
         @keyframes livePulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
+            0%, 100% { 
+                opacity: 1; 
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.8; 
+                transform: scale(1.05);
+            }
         }
 
-        /* Tournament/Timer Section */
-        .tournament-section {
-            background: linear-gradient(135deg, #dc2626, #b91c1c);
-            color: white;
-            padding: 8px 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: clamp(12px, 1.6vw, 14px);
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-radius: 0 0 4px 4px;
-            position: absolute;
-            bottom: -28px;
-            left: 50%;
-            transform: translateX(-50%);
-            min-width: 100px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Goal Celebration Overlay */
+        /* Goal Celebration */
         .goal-celebration {
             position: fixed;
             top: 0;
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: radial-gradient(circle, rgba(34, 197, 94, 0.2) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(34, 197, 94, 0.3) 0%, rgba(34, 197, 94, 0.1) 50%, transparent 70%);
             display: none;
             align-items: center;
             justify-content: center;
@@ -191,183 +239,162 @@
         }
 
         .goal-text {
-            font-size: clamp(80px, 15vw, 200px);
+            font-size: clamp(100px, 20vw, 250px);
             font-weight: 900;
             color: #22c55e;
             text-transform: uppercase;
-            letter-spacing: 8px;
-            text-shadow: 0 0 30px rgba(34, 197, 94, 0.8);
-            animation: goalAnimation 3s ease-out;
+            letter-spacing: 12px;
+            text-shadow: 
+                0 0 40px rgba(34, 197, 94, 0.8),
+                0 0 80px rgba(34, 197, 94, 0.6);
+            animation: goalAnimation 4s ease-out;
         }
 
         @keyframes goalAnimation {
             0% {
-                transform: scale(0.5);
+                transform: scale(0.3);
                 opacity: 0;
             }
-            20% {
-                transform: scale(1.2);
+            15% {
+                transform: scale(1.3);
                 opacity: 1;
             }
-            40% {
+            30% {
                 transform: scale(0.9);
                 opacity: 1;
             }
-            60% {
+            45% {
                 transform: scale(1.1);
                 opacity: 1;
             }
-            80% {
+            60% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            85% {
                 transform: scale(1);
                 opacity: 1;
             }
             100% {
-                transform: scale(1);
+                transform: scale(1.1);
                 opacity: 0;
             }
         }
 
-        /* Confetti particles */
-        .confetti {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: #fbbf24;
-            animation: confettiFall 3s linear;
+        /* Events Ticker */
+        .events-ticker {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80vw;
+            max-width: 1200px;
+            height: 50px;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(30, 30, 30, 0.9));
+            border-radius: 25px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            z-index: 999;
+            display: none;
         }
 
-        @keyframes confettiFall {
-            0% {
-                transform: translateY(-100vh) rotate(0deg);
+        .events-ticker.show {
+            display: block;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
                 opacity: 1;
+                transform: translateX(-50%) translateY(0);
             }
-            100% {
-                transform: translateY(100vh) rotate(360deg);
-                opacity: 0;
-            }
+        }
+
+        .events-scroll {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            padding: 0 20px;
+            animation: scroll 15s linear infinite;
+            gap: 40px;
+        }
+
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        .event-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
         }
 
         /* Watermark */
         .watermark {
             position: fixed;
-            bottom: 25px;
-            right: 25px;
-            background: rgba(15, 23, 42, 0.9);
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(30, 30, 30, 0.9));
             color: white;
-            padding: clamp(12px, 1.8vw, 16px) clamp(16px, 2.2vw, 20px);
-            border-radius: clamp(8px, 1.2vw, 10px);
-            font-size: clamp(10px, 1.2vw, 12px);
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-size: 13px;
             z-index: 1001;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: clamp(6px, 1vw, 8px);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-            width: clamp(80px, 10vw, 110px);
-            min-height: clamp(70px, 8vw, 85px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            gap: 10px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+            width: 120px;
+            min-height: 95px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
         }
 
         .watermark-logo {
-            width: clamp(40px, 6vw, 60px);
-            height: clamp(40px, 6vw, 60px);
-            background: url('/storage/logo/watermark-logo.png') no-repeat center;
-            background-size: contain;
-            border-radius: clamp(6px, 1vw, 8px);
+            width: 65px;
+            height: 65px;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            font-weight: 900;
+            color: white;
             flex-shrink: 0;
         }
 
         .watermark-text {
-            font-size: clamp(9px, 1.1vw, 11px);
-            font-weight: 500;
+            font-size: 12px;
+            font-weight: 600;
             text-align: center;
             color: #cbd5e1;
-            line-height: 1.2;
+            line-height: 1.3;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.5px;
         }
 
-        /* Responsive breakpoints */
-        @media (max-width: 1200px) {
-            .scoreboard {
-                width: 85vw;
-                min-width: 500px;
-            }
-        }
-
+        /* Responsive Design */
         @media (max-width: 768px) {
             .scoreboard {
-                height: 55px;
-                width: 90vw;
-                min-width: 400px;
-                top: 15px;
-            }
-            
-            .team-section {
-                padding: 0 20px;
-            }
-            
-            .score-section {
-                min-width: 100px;
-                width: 100px;
-            }
-            
-            .tournament-section {
-                bottom: -25px;
-                padding: 6px 20px;
-                min-width: 80px;
-            }
-            
-            .live-indicator {
-                top: -6px;
-                right: 12px;
-                padding: 3px 8px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .scoreboard {
-                height: 50px;
+                height: 60px;
                 width: 95vw;
-                min-width: 320px;
-                top: 10px;
+                min-width: 450px;
+                top: 20px;
             }
             
             .team-section {
-                padding: 0 15px;
-            }
-            
-            .score-section {
-                min-width: 90px;
-                width: 90px;
-            }
-            
-            .tournament-section {
-                bottom: -22px;
-                padding: 5px 15px;
-                min-width: 70px;
-            }
-            
-            .watermark {
-                bottom: 20px;
-                right: 20px;
-            }
-        }
-
-        /* Ultra-wide screens */
-        @media (min-width: 1920px) {
-            .scoreboard {
-                width: 70vw;
-                min-width: 800px;
-            }
-        }
-
-        /* 4K screens */
-        @media (min-width: 2560px) {
-            .scoreboard {
-                width: 60vw;
-                min-width: 1000px;
-                height: 70px;
+                padding: 0 25px;
             }
             
             .score-section {
@@ -375,8 +402,10 @@
                 width: 140px;
             }
             
-            .tournament-section {
-                bottom: -32px;
+            .timer-section {
+                bottom: -28px;
+                padding: 5px 20px;
+                min-width: 100px;
             }
         }
     </style>
@@ -387,6 +416,7 @@
         <div class="goal-text bangla-text" id="goalText">GOAL!</div>
     </div>
 
+    <!-- Main Scoreboard -->
     <div class="scoreboard" id="scoreboard">
         <!-- Live Indicator -->
         <div class="live-indicator" id="liveIndicator">
@@ -405,9 +435,11 @@
 
         <!-- Score Section -->
         <div class="score-section">
-            <span class="score" id="teamAScore">{{ $match->team_a_score }}</span>
-            <span class="score-divider">-</span>
-            <span class="score" id="teamBScore">{{ $match->team_b_score }}</span>
+            <div class="score-display">
+                <span class="score" id="teamAScore">{{ $match->team_a_score }}</span>
+                <span class="score-divider">-</span>
+                <span class="score" id="teamBScore">{{ $match->team_b_score }}</span>
+            </div>
         </div>
 
         <!-- Away Team -->
@@ -415,85 +447,113 @@
             <span class="bangla-text" id="teamBName">{{ $match->team_b }}</span>
         </div>
 
-        <!-- Tournament/Timer Section -->
-        <div class="tournament-section" id="tournamentSection">
-            <span id="matchTimer">{{ $match->match_time }}'</span>
+        <!-- Timer Section -->
+        <div class="timer-section" id="timerSection">
+            <div class="timer-display" id="matchTimer">{{ sprintf('%02d:%02d', floor($match->match_time), ($match->match_time * 60) % 60) }}</div>
+        </div>
+    </div>
+
+    <!-- Events Ticker -->
+    <div class="events-ticker" id="eventsTicker" @if($events->count() > 0) style="display: block;" @endif>
+        <div class="events-scroll" id="eventsScroll">
+            @foreach($events as $event)
+            <div class="event-item">
+                <span>{{ $event['minute'] }}' - {{ $event['player'] }} ({{ $event['team'] }})</span>
+            </div>
+            @endforeach
         </div>
     </div>
 
     <!-- Watermark -->
+    @if($showWatermark)
     <div class="watermark">
-        <div class="watermark-logo"></div>
-        <div class="watermark-text bangla-text">Powered by</div>
+        <div class="watermark-logo">SS</div>
+        <div class="watermark-text bangla-text">ScoreStream Pro</div>
     </div>
+    @endif
 
     <script>
-        // Configuration
-        const matchToken = '{{ $overlayToken->token ?? "demo" }}';
-        const matchId = {{ $match->id ?? 1 }};
-        
-        // Current match data - Real data from backend
-        let matchData = {
+        // Pass data from Laravel to JavaScript
+        window.overlayToken = '{{ $overlayToken->token ?? "demo" }}';
+        window.matchId = {{ $match->id ?? 1 }};
+        window.matchData = {
             teamA: '{{ $match->team_a }}',
             teamB: '{{ $match->team_b }}',
             teamAScore: {{ $match->team_a_score }},
             teamBScore: {{ $match->team_b_score }},
-            matchTime: {{ $match->match_time }},
-            status: '{{ $match->status }}'
+            matchTimeMinutes: {{ floor($match->match_time) }},
+            matchTimeSeconds: {{ ($match->match_time * 60) % 60 }},
+            status: '{{ $match->status }}',
+            events: @json($events->toArray())
         };
+
+        // Configuration
+        const matchToken = window.overlayToken;
+        const matchId = window.matchId;
+        let matchData = window.matchData;
 
         let previousScores = {
             teamA: matchData.teamAScore,
             teamB: matchData.teamBScore
         };
 
-        // Goal celebration function
+        let timer = {
+            minutes: matchData.matchTimeMinutes,
+            seconds: matchData.matchTimeSeconds,
+            interval: null,
+            isRunning: false
+        };
+
+        // Goal Celebration
         function showGoalCelebration(team) {
             const celebration = document.getElementById('goalCelebration');
             const goalText = document.getElementById('goalText');
             
-            // Set goal text
-            goalText.textContent = 'GOAL!';
-            goalText.className = 'goal-text bangla-text';
+            const teamName = team === 'teamA' ? matchData.teamA : matchData.teamB;
+            goalText.textContent = `GOAL! ${teamName}`;
             
-            // Show celebration
             celebration.style.display = 'flex';
             
-            // Create confetti
-            createConfetti();
-            
-            // Hide after animation
             setTimeout(() => {
                 celebration.style.display = 'none';
-            }, 3000);
+            }, 4000);
         }
 
-        // Create confetti particles
-        function createConfetti() {
-            const celebration = document.getElementById('goalCelebration');
-            const colors = ['#fbbf24', '#22c55e', '#3b82f6', '#ef4444', '#8b5cf6'];
+        // Timer Functions
+        function startTimer() {
+            if (timer.interval) clearInterval(timer.interval);
             
-            for (let i = 0; i < 50; i++) {
-                const confetti = document.createElement('div');
-                confetti.className = 'confetti';
-                confetti.style.left = Math.random() * 100 + 'vw';
-                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
-                confetti.style.animationDelay = Math.random() * 2 + 's';
-                celebration.appendChild(confetti);
-                
-                // Remove after animation
-                setTimeout(() => {
-                    confetti.remove();
-                }, 3000);
-            }
+            timer.interval = setInterval(() => {
+                if (timer.isRunning && matchData.status === 'live') {
+                    timer.seconds++;
+                    if (timer.seconds >= 60) {
+                        timer.seconds = 0;
+                        timer.minutes++;
+                    }
+                    updateTimerDisplay();
+                }
+            }, 1000);
         }
 
-        // Update display
+        function updateTimerDisplay() {
+            const display = document.getElementById('matchTimer');
+            const minutes = timer.minutes.toString().padStart(2, '0');
+            const seconds = timer.seconds.toString().padStart(2, '0');
+            display.textContent = `${minutes}:${seconds}`;
+        }
+
+        function setTimer(minutes, seconds) {
+            timer.minutes = minutes;
+            timer.seconds = seconds;
+            updateTimerDisplay();
+        }
+
+        // Update Display Function
         function updateDisplay(data) {
             document.getElementById('teamAName').textContent = data.teamA;
             document.getElementById('teamBName').textContent = data.teamB;
             
-            // Check for goal before updating scores
+            // Check for goals
             if (data.teamAScore > previousScores.teamA) {
                 showGoalCelebration('teamA');
             }
@@ -501,22 +561,25 @@
                 showGoalCelebration('teamB');
             }
             
-            // Update scores with animation
+            // Update scores
             updateScore('teamAScore', data.teamAScore);
             updateScore('teamBScore', data.teamBScore);
             
-            // Update previous scores
             previousScores.teamA = data.teamAScore;
             previousScores.teamB = data.teamBScore;
             
             // Update timer
-            document.getElementById('matchTimer').textContent = data.matchTime + "'";
+            if (data.matchTimeMinutes !== undefined && data.matchTimeSeconds !== undefined) {
+                setTimer(data.matchTimeMinutes, data.matchTimeSeconds);
+            }
             
             // Update live indicator
             updateLiveIndicator(data.status);
+            
+            // Update events ticker
+            updateEventsTicker(data.events);
         }
 
-        // Update score with animation
         function updateScore(elementId, newScore) {
             const element = document.getElementById(elementId);
             if (element.textContent != newScore) {
@@ -525,41 +588,61 @@
                 
                 setTimeout(() => {
                     element.classList.remove('updated');
-                }, 600);
+                }, 800);
             }
         }
 
-        // Update live indicator based on real match status
         function updateLiveIndicator(status) {
             const indicator = document.getElementById('liveIndicator');
             
-            if (status === 'live') {
-                indicator.style.display = 'block';
-                indicator.innerHTML = '<span class="bangla-text">LIVE</span>';
-                indicator.style.background = '#dc2626';
-            } else if (status === 'finished') {
-                indicator.style.display = 'block';
-                indicator.style.background = '#059669';
-                indicator.innerHTML = '<span class="bangla-text">FINISHED</span>';
-            } else if (status === 'pending') {
-                indicator.style.display = 'block';
-                indicator.style.background = '#d97706';
-                indicator.innerHTML = '<span class="bangla-text">PENDING</span>';
-            } else {
-                indicator.style.display = 'none';
+            switch (status) {
+                case 'live':
+                    indicator.style.display = 'block';
+                    indicator.innerHTML = '<span class="bangla-text">LIVE</span>';
+                    indicator.style.background = 'linear-gradient(135deg, #dc2626, #ef4444)';
+                    timer.isRunning = true;
+                    break;
+                case 'finished':
+                    indicator.style.display = 'block';
+                    indicator.style.background = 'linear-gradient(135deg, #059669, #10b981)';
+                    indicator.innerHTML = '<span class="bangla-text">FINISHED</span>';
+                    timer.isRunning = false;
+                    break;
+                case 'pending':
+                    indicator.style.display = 'block';
+                    indicator.style.background = 'linear-gradient(135deg, #d97706, #f59e0b)';
+                    indicator.innerHTML = '<span class="bangla-text">PENDING</span>';
+                    timer.isRunning = false;
+                    break;
+                default:
+                    indicator.style.display = 'none';
+                    timer.isRunning = false;
             }
         }
 
-        // Auto-update functionality
-        function startAutoUpdate() {
-            // Update match data every 3 seconds for real-time feel
-            setInterval(() => {
-                updateOverlayData();
-            }, 3000);
+        function updateEventsTicker(events) {
+            if (!events || events.length === 0) return;
+            
+            const ticker = document.getElementById('eventsTicker');
+            const scroll = document.getElementById('eventsScroll');
+            
+            scroll.innerHTML = '';
+            
+            const recentEvents = events.slice(-5).reverse();
+            recentEvents.forEach(event => {
+                const eventItem = document.createElement('div');
+                eventItem.className = 'event-item';
+                eventItem.innerHTML = `<span>${event.minute}' - ${event.player} (${event.team})</span>`;
+                scroll.appendChild(eventItem);
+            });
+            
+            if (recentEvents.length > 0) {
+                ticker.classList.add('show');
+            }
         }
 
-        // Fetch updated match data
-        async function updateOverlayData() {
+        // Real-time data fetching
+        async function fetchMatchData() {
             try {
                 const response = await fetch(`/api/overlay-data/${matchId}`);
                 if (response.ok) {
@@ -569,14 +652,18 @@
                     }
                 }
             } catch (error) {
-                console.error('Error updating overlay data:', error);
+                console.error('Error fetching match data:', error);
             }
         }
 
         // Initialize overlay
         function initializeOverlay() {
             updateDisplay(matchData);
-            startAutoUpdate();
+            updateTimerDisplay();
+            startTimer();
+            
+            // Auto-update every 3 seconds
+            setInterval(fetchMatchData, 3000);
         }
 
         // Start when page loads

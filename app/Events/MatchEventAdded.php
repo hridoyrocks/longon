@@ -1,5 +1,4 @@
 <?php
-// app/Events/MatchEventAdded.php
 namespace App\Events;
 
 use App\Models\MatchEvent;
@@ -17,7 +16,7 @@ class MatchEventAdded implements ShouldBroadcast
 
     public function __construct(MatchEvent $event)
     {
-        $this->event = $event;
+        $this->event = $event->load('footballMatch');
     }
 
     public function broadcastOn()
@@ -32,8 +31,20 @@ class MatchEventAdded implements ShouldBroadcast
 
     public function broadcastWith()
     {
+        $match = $this->event->footballMatch;
+        
         return [
-            'event' => $this->event->toArray()
+            'event' => [
+                'id' => $this->event->id,
+                'type' => $this->event->event_type,
+                'team' => $this->event->team,
+                'player' => $this->event->player,
+                'minute' => $this->event->minute,
+                'description' => $this->event->description,
+                'team_name' => $this->event->team === 'team_a' ? $match->team_a : $match->team_b,
+            ],
+            'match_id' => $this->event->match_id,
+            'timestamp' => now()->timestamp
         ];
     }
 }
