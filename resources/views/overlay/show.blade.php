@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Football Scoreboard Overlay - Professional</title>
+    <title>Football Scoreboard Overlay</title>
     
     <!-- Bangla Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <style>
         * {
@@ -21,12 +21,10 @@
             font-family: 'Inter', 'Hind Siliguri', sans-serif;
             background: transparent;
             overflow: hidden;
-            font-feature-settings: 'cv02','cv03','cv04','cv11';
         }
 
         .bangla-text {
             font-family: 'Hind Siliguri', sans-serif;
-            font-weight: 500;
         }
 
         /* Main Scoreboard Container */
@@ -35,488 +33,495 @@
             top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 24px 32px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
-            min-width: 420px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: stretch;
+            height: 60px;
             z-index: 1000;
-            animation: slideDown 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: slideDown 0.8s ease-out;
+            filter: drop-shadow(0 8px 25px rgba(0, 0, 0, 0.3));
+            width: 80vw;
+            min-width: 600px;
+            max-width: 1200px;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         @keyframes slideDown {
             from {
                 opacity: 0;
-                transform: translateX(-50%) translateY(-40px) scale(0.95);
+                transform: translateX(-50%) translateY(-40px);
             }
             to {
                 opacity: 1;
-                transform: translateX(-50%) translateY(0) scale(1);
+                transform: translateX(-50%) translateY(0);
             }
         }
 
-        /* Header Section */
-        .header {
+        /* Team Sections */
+        .team-section {
+            background: linear-gradient(135deg, #1e40af, #1d4ed8);
+            color: white;
+            padding: 0 30px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 20px;
+            font-size: clamp(22px, 3vw, 28px);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            flex: 1;
+            min-width: 0;
+            position: relative;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: all 0.3s ease;
+            border-top: 2px solid #3b82f6;
+            border-bottom: 2px solid #3b82f6;
         }
 
-        .live-indicator {
+        .team-section.home {
+            border-left: 2px solid #3b82f6;
+            border-radius: 4px 0 0 4px;
+        }
+
+        .team-section.away {
+            border-right: 2px solid #3b82f6;
+            border-radius: 0 4px 4px 0;
+        }
+
+        /* Score Section */
+        .score-section {
+            background: linear-gradient(135deg, #111827, #1f2937);
+            color: white;
             display: flex;
             align-items: center;
-            gap: 8px;
-            color: #ef4444;
-            font-size: 14px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            justify-content: center;
+            font-size: clamp(32px, 4.5vw, 40px);
+            font-weight: 900;
+            min-width: 120px;
+            width: 120px;
+            position: relative;
+            flex-shrink: 0;
+            border: 2px solid #374151;
+            font-feature-settings: 'tnum';
         }
 
-        .live-dot {
-            width: 8px;
-            height: 8px;
-            background: #ef4444;
-            border-radius: 50%;
-            animation: pulse 2s infinite;
+        .score {
+            transition: all 0.4s ease;
+            font-family: 'Inter', monospace;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.2); }
-        }
-
-        /* Teams Section */
-        .teams {
-            display: grid;
-            grid-template-columns: 1fr auto 1fr;
-            gap: 24px;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .team {
-            text-align: center;
-            color: white;
-        }
-
-        .team-name {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: rgba(255, 255, 255, 0.9);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .team-score {
-            font-size: 48px;
-            font-weight: 700;
-            line-height: 1;
-            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .team-score.updated {
-            animation: scoreUpdate 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        .score.updated {
+            animation: scoreUpdate 0.6s ease;
         }
 
         @keyframes scoreUpdate {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.15); color: #3b82f6; }
-            100% { transform: scale(1); }
+            0% { transform: scale(1); color: white; }
+            50% { transform: scale(1.2); color: #fbbf24; }
+            100% { transform: scale(1); color: white; }
         }
 
-        .vs {
-            font-size: 18px;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.6);
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .score-divider {
+            margin: 0 8px;
+            font-size: clamp(24px, 3.5vw, 28px);
+            color: #6b7280;
+            font-weight: 400;
         }
 
-        /* Match Info Section */
-        .match-info {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-            margin-bottom: 16px;
-        }
-
-        .match-time {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
+        /* Live indicator */
+        .live-indicator {
+            position: absolute;
+            top: -8px;
+            right: 15px;
+            background: #dc2626;
             color: white;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .match-status {
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 3px;
+            font-size: clamp(9px, 1.2vw, 11px);
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            animation: livePulse 2s infinite;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
         }
 
-        .status-live {
-            background: rgba(239, 68, 68, 0.2);
-            color: #ef4444;
-            border: 1px solid rgba(239, 68, 68, 0.3);
+        @keyframes livePulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
         }
 
-        .status-finished {
-            background: rgba(34, 197, 94, 0.2);
-            color: #22c55e;
-            border: 1px solid rgba(34, 197, 94, 0.3);
-        }
-
-        .status-pending {
-            background: rgba(251, 191, 36, 0.2);
-            color: #fbbf24;
-            border: 1px solid rgba(251, 191, 36, 0.3);
-        }
-
-        /* Events Section */
-        .events {
-            max-height: 100px;
-            overflow-y: auto;
-            scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
-        }
-
-        .events::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        .events::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .events::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 2px;
-        }
-
-        .event {
-            background: rgba(255, 255, 255, 0.08);
-            margin: 6px 0;
-            padding: 12px 16px;
-            border-radius: 12px;
+        /* Tournament/Timer Section */
+        .tournament-section {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
             color: white;
-            font-size: 14px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            animation: slideInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 8px 25px;
             display: flex;
             align-items: center;
-            gap: 12px;
-        }
-
-        @keyframes slideInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .event-icon {
-            font-size: 16px;
-            width: 24px;
-            text-align: center;
-        }
-
-        .event-time {
+            justify-content: center;
+            font-size: clamp(12px, 1.6vw, 14px);
             font-weight: 600;
-            color: #3b82f6;
-            min-width: 35px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-radius: 0 0 4px 4px;
+            position: absolute;
+            bottom: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            min-width: 100px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
-        .event-details {
-            flex: 1;
+        /* Goal Celebration Overlay */
+        .goal-celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle, rgba(34, 197, 94, 0.2) 0%, transparent 70%);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            pointer-events: none;
         }
 
-        .event-player {
-            font-weight: 500;
-            color: rgba(255, 255, 255, 0.9);
+        .goal-text {
+            font-size: clamp(80px, 15vw, 200px);
+            font-weight: 900;
+            color: #22c55e;
+            text-transform: uppercase;
+            letter-spacing: 8px;
+            text-shadow: 0 0 30px rgba(34, 197, 94, 0.8);
+            animation: goalAnimation 3s ease-out;
         }
 
-        .event-team {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.6);
-            margin-left: 8px;
+        @keyframes goalAnimation {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+            20% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+            40% {
+                transform: scale(0.9);
+                opacity: 1;
+            }
+            60% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+            80% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+
+        /* Confetti particles */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #fbbf24;
+            animation: confettiFall 3s linear;
+        }
+
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
         }
 
         /* Watermark */
         .watermark {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(0, 0, 0, 0.8);
+            bottom: 25px;
+            right: 25px;
+            background: rgba(15, 23, 42, 0.9);
             color: white;
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-size: 12px;
+            padding: clamp(12px, 1.8vw, 16px) clamp(16px, 2.2vw, 20px);
+            border-radius: clamp(8px, 1.2vw, 10px);
+            font-size: clamp(10px, 1.2vw, 12px);
             z-index: 1001;
-            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: clamp(6px, 1vw, 8px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            width: clamp(80px, 10vw, 110px);
+            min-height: clamp(70px, 8vw, 85px);
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .watermark a {
-            color: #3b82f6;
-            text-decoration: none;
+        .watermark-logo {
+            width: clamp(40px, 6vw, 60px);
+            height: clamp(40px, 6vw, 60px);
+            background: url('/storage/logo/watermark-logo.png') no-repeat center;
+            background-size: contain;
+            border-radius: clamp(6px, 1vw, 8px);
+            flex-shrink: 0;
+        }
+
+        .watermark-text {
+            font-size: clamp(9px, 1.1vw, 11px);
             font-weight: 500;
+            text-align: center;
+            color: #cbd5e1;
+            line-height: 1.2;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
 
-        /* Update Indicator */
-        .update-indicator {
-            position: fixed;
-            top: 10px;
-            right: 20px;
-            background: rgba(34, 197, 94, 0.9);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            z-index: 1002;
-            backdrop-filter: blur(10px);
+        /* Responsive breakpoints */
+        @media (max-width: 1200px) {
+            .scoreboard {
+                width: 85vw;
+                min-width: 500px;
+            }
         }
 
-        .update-indicator.show {
-            opacity: 1;
+        @media (max-width: 768px) {
+            .scoreboard {
+                height: 55px;
+                width: 90vw;
+                min-width: 400px;
+                top: 15px;
+            }
+            
+            .team-section {
+                padding: 0 20px;
+            }
+            
+            .score-section {
+                min-width: 100px;
+                width: 100px;
+            }
+            
+            .tournament-section {
+                bottom: -25px;
+                padding: 6px 20px;
+                min-width: 80px;
+            }
+            
+            .live-indicator {
+                top: -6px;
+                right: 12px;
+                padding: 3px 8px;
+            }
         }
 
-        /* Responsive Design */
         @media (max-width: 480px) {
             .scoreboard {
+                height: 50px;
+                width: 95vw;
                 min-width: 320px;
-                padding: 20px 24px;
                 top: 10px;
-                margin: 0 10px;
-                left: 10px;
-                right: 10px;
-                transform: none;
             }
             
-            .teams {
-                gap: 16px;
+            .team-section {
+                padding: 0 15px;
             }
             
-            .team-score {
-                font-size: 36px;
+            .score-section {
+                min-width: 90px;
+                width: 90px;
             }
             
-            .team-name {
-                font-size: 14px;
+            .tournament-section {
+                bottom: -22px;
+                padding: 5px 15px;
+                min-width: 70px;
             }
             
-            .vs {
-                font-size: 16px;
+            .watermark {
+                bottom: 20px;
+                right: 20px;
             }
         }
 
-        /* Enhanced Animations */
-        .scoreboard:hover {
-            transform: translateX(-50%) translateY(-2px);
-            box-shadow: 0 32px 64px -12px rgba(0, 0, 0, 0.5);
+        /* Ultra-wide screens */
+        @media (min-width: 1920px) {
+            .scoreboard {
+                width: 70vw;
+                min-width: 800px;
+            }
         }
 
-        .team:hover .team-score {
-            color: #3b82f6;
-        }
-
-        /* Goal Celebration Animation */
-        @keyframes goalCelebration {
-            0% { transform: scale(1); }
-            25% { transform: scale(1.1) rotate(2deg); }
-            50% { transform: scale(1.15) rotate(-2deg); }
-            75% { transform: scale(1.1) rotate(1deg); }
-            100% { transform: scale(1); }
-        }
-
-        .goal-animation {
-            animation: goalCelebration 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        /* Loading State */
-        .loading {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 14px;
-        }
-
-        .loading-dots {
-            display: flex;
-            gap: 4px;
-        }
-
-        .loading-dot {
-            width: 6px;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.6);
-            border-radius: 50%;
-            animation: loadingDot 1.5s infinite;
-        }
-
-        .loading-dot:nth-child(2) { animation-delay: 0.2s; }
-        .loading-dot:nth-child(3) { animation-delay: 0.4s; }
-
-        @keyframes loadingDot {
-            0%, 80%, 100% { transform: scale(1); opacity: 0.6; }
-            40% { transform: scale(1.2); opacity: 1; }
+        /* 4K screens */
+        @media (min-width: 2560px) {
+            .scoreboard {
+                width: 60vw;
+                min-width: 1000px;
+                height: 70px;
+            }
+            
+            .score-section {
+                min-width: 140px;
+                width: 140px;
+            }
+            
+            .tournament-section {
+                bottom: -32px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="update-indicator" id="updateIndicator">
-        <span class="bangla-text">আপডেট হচ্ছে...</span>
+    <!-- Goal Celebration Overlay -->
+    <div class="goal-celebration" id="goalCelebration">
+        <div class="goal-text bangla-text" id="goalText">GOAL!</div>
     </div>
 
     <div class="scoreboard" id="scoreboard">
-        <!-- Header -->
-        <div class="header">
-            <div class="live-indicator" id="liveIndicator">
-                <div class="live-dot"></div>
-                <span class="bangla-text">লাইভ ম্যাচ</span>
-            </div>
+        <!-- Live Indicator -->
+        <div class="live-indicator" id="liveIndicator">
+            <span class="bangla-text">
+                @if($match->status === 'live') LIVE
+                @elseif($match->status === 'finished') FINISHED
+                @elseif($match->status === 'pending') PENDING
+                @endif
+            </span>
         </div>
-        
-        <!-- Teams Section -->
-        <div class="teams">
-            <div class="team">
-                <div class="team-name bangla-text" id="teamAName">বাংলাদেশ</div>
-                <div class="team-score" id="teamAScore">2</div>
-            </div>
-            <div class="vs">VS</div>
-            <div class="team">
-                <div class="team-name bangla-text" id="teamBName">ভারত</div>
-                <div class="team-score" id="teamBScore">1</div>
-            </div>
+
+        <!-- Home Team -->
+        <div class="team-section home">
+            <span class="bangla-text" id="teamAName">{{ $match->team_a }}</span>
         </div>
-        
-        <!-- Match Info -->
-        <div class="match-info">
-            <div class="match-time bangla-text" id="matchTime">৪৫'</div>
-            <div class="match-status status-live bangla-text" id="matchStatus">
-                লাইভ
-            </div>
+
+        <!-- Score Section -->
+        <div class="score-section">
+            <span class="score" id="teamAScore">{{ $match->team_a_score }}</span>
+            <span class="score-divider">-</span>
+            <span class="score" id="teamBScore">{{ $match->team_b_score }}</span>
         </div>
-        
-        <!-- Events -->
-        <div class="events" id="eventsContainer">
-            <div class="event">
-                <div class="event-icon">⚽</div>
-                <div class="event-time">৪৩'</div>
-                <div class="event-details">
-                    <span class="event-player bangla-text">সাকিব আল হাসান</span>
-                    <span class="event-team bangla-text">(বাংলাদেশ)</span>
-                </div>
-            </div>
-            <div class="event">
-                <div class="event-icon">🟨</div>
-                <div class="event-time">৩৮'</div>
-                <div class="event-details">
-                    <span class="event-player bangla-text">বিরাট কোহলি</span>
-                    <span class="event-team bangla-text">(ভারত)</span>
-                </div>
-            </div>
-            <div class="event">
-                <div class="event-icon">⚽</div>
-                <div class="event-time">২৫'</div>
-                <div class="event-details">
-                    <span class="event-player bangla-text">তামিম ইকবাল</span>
-                    <span class="event-team bangla-text">(বাংলাদেশ)</span>
-                </div>
-            </div>
+
+        <!-- Away Team -->
+        <div class="team-section away">
+            <span class="bangla-text" id="teamBName">{{ $match->team_b }}</span>
+        </div>
+
+        <!-- Tournament/Timer Section -->
+        <div class="tournament-section" id="tournamentSection">
+            <span id="matchTimer">{{ $match->match_time }}'</span>
         </div>
     </div>
 
+    <!-- Watermark -->
     <div class="watermark">
-        <span class="bangla-text">Powered by</span> <a href="https://scorestream.pro" target="_blank">ScoreStream Pro</a>
+        <div class="watermark-logo"></div>
+        <div class="watermark-text bangla-text">Powered by</div>
     </div>
 
     <script>
-        // Demo data - Replace with real API calls
-        const matchData = {
-            id: 1,
-            teamA: 'বাংলাদেশ',
-            teamB: 'ভারত',
-            teamAScore: 2,
-            teamBScore: 1,
-            matchTime: 45,
-            status: 'live',
-            events: [
-                { minute: 43, type: 'goal', player: 'সাকিব আল হাসান', team: 'বাংলাদেশ', icon: '⚽' },
-                { minute: 38, type: 'yellow_card', player: 'বিরাট কোহলি', team: 'ভারত', icon: '🟨' },
-                { minute: 25, type: 'goal', player: 'তামিম ইকবাল', team: 'বাংলাদেশ', icon: '⚽' }
-            ]
+        // Configuration
+        const matchToken = '{{ $overlayToken->token ?? "demo" }}';
+        const matchId = {{ $match->id ?? 1 }};
+        
+        // Current match data - Real data from backend
+        let matchData = {
+            teamA: '{{ $match->team_a }}',
+            teamB: '{{ $match->team_b }}',
+            teamAScore: {{ $match->team_a_score }},
+            teamBScore: {{ $match->team_b_score }},
+            matchTime: {{ $match->match_time }},
+            status: '{{ $match->status }}'
         };
 
-        let previousData = { ...matchData };
-        let isLoading = false;
+        let previousScores = {
+            teamA: matchData.teamAScore,
+            teamB: matchData.teamBScore
+        };
 
-        // Initialize overlay
-        function initializeOverlay() {
-            updateDisplay(matchData);
-            startAutoUpdate();
+        // Goal celebration function
+        function showGoalCelebration(team) {
+            const celebration = document.getElementById('goalCelebration');
+            const goalText = document.getElementById('goalText');
+            
+            // Set goal text
+            goalText.textContent = 'GOAL!';
+            goalText.className = 'goal-text bangla-text';
+            
+            // Show celebration
+            celebration.style.display = 'flex';
+            
+            // Create confetti
+            createConfetti();
+            
+            // Hide after animation
+            setTimeout(() => {
+                celebration.style.display = 'none';
+            }, 3000);
         }
 
-        // Update display with new data
+        // Create confetti particles
+        function createConfetti() {
+            const celebration = document.getElementById('goalCelebration');
+            const colors = ['#fbbf24', '#22c55e', '#3b82f6', '#ef4444', '#8b5cf6'];
+            
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 2 + 's';
+                celebration.appendChild(confetti);
+                
+                // Remove after animation
+                setTimeout(() => {
+                    confetti.remove();
+                }, 3000);
+            }
+        }
+
+        // Update display
         function updateDisplay(data) {
-            // Update team names
             document.getElementById('teamAName').textContent = data.teamA;
             document.getElementById('teamBName').textContent = data.teamB;
-
+            
+            // Check for goal before updating scores
+            if (data.teamAScore > previousScores.teamA) {
+                showGoalCelebration('teamA');
+            }
+            if (data.teamBScore > previousScores.teamB) {
+                showGoalCelebration('teamB');
+            }
+            
             // Update scores with animation
-            updateScore('teamAScore', data.teamAScore, previousData.teamAScore);
-            updateScore('teamBScore', data.teamBScore, previousData.teamBScore);
-
-            // Update match time
-            document.getElementById('matchTime').textContent = data.matchTime + "'";
-
-            // Update status
-            updateStatus(data.status);
-
-            // Update events
-            updateEvents(data.events);
-
+            updateScore('teamAScore', data.teamAScore);
+            updateScore('teamBScore', data.teamBScore);
+            
+            // Update previous scores
+            previousScores.teamA = data.teamAScore;
+            previousScores.teamB = data.teamBScore;
+            
+            // Update timer
+            document.getElementById('matchTimer').textContent = data.matchTime + "'";
+            
             // Update live indicator
             updateLiveIndicator(data.status);
         }
 
         // Update score with animation
-        function updateScore(elementId, newScore, oldScore) {
+        function updateScore(elementId, newScore) {
             const element = document.getElementById(elementId);
-            
-            if (newScore !== oldScore) {
+            if (element.textContent != newScore) {
                 element.classList.add('updated');
                 element.textContent = newScore;
-                
-                // Goal celebration for score increase
-                if (newScore > oldScore) {
-                    document.getElementById('scoreboard').classList.add('goal-animation');
-                    setTimeout(() => {
-                        document.getElementById('scoreboard').classList.remove('goal-animation');
-                    }, 800);
-                }
                 
                 setTimeout(() => {
                     element.classList.remove('updated');
@@ -524,137 +529,58 @@
             }
         }
 
-        // Update match status
-        function updateStatus(status) {
-            const statusElement = document.getElementById('matchStatus');
-            statusElement.className = `match-status status-${status} bangla-text`;
-            
-            const statusText = {
-                'live': 'লাইভ',
-                'finished': 'সমাপ্ত',
-                'pending': 'অপেক্ষমান'
-            };
-            
-            statusElement.textContent = statusText[status] || 'অজানা';
-        }
-
-        // Update live indicator
+        // Update live indicator based on real match status
         function updateLiveIndicator(status) {
             const indicator = document.getElementById('liveIndicator');
             
             if (status === 'live') {
-                indicator.style.display = 'flex';
-                indicator.innerHTML = `
-                    <div class="live-dot"></div>
-                    <span class="bangla-text">লাইভ ম্যাচ</span>
-                `;
+                indicator.style.display = 'block';
+                indicator.innerHTML = '<span class="bangla-text">LIVE</span>';
+                indicator.style.background = '#dc2626';
             } else if (status === 'finished') {
-                indicator.style.display = 'flex';
-                indicator.innerHTML = `
-                    <div style="width: 8px; height: 8px; background: #22c55e; border-radius: 50%;"></div>
-                    <span class="bangla-text">সমাপ্ত</span>
-                `;
+                indicator.style.display = 'block';
+                indicator.style.background = '#059669';
+                indicator.innerHTML = '<span class="bangla-text">FINISHED</span>';
+            } else if (status === 'pending') {
+                indicator.style.display = 'block';
+                indicator.style.background = '#d97706';
+                indicator.innerHTML = '<span class="bangla-text">PENDING</span>';
             } else {
                 indicator.style.display = 'none';
             }
         }
 
-        // Update events
-        function updateEvents(events) {
-            const container = document.getElementById('eventsContainer');
-            container.innerHTML = '';
-            
-            events.slice(0, 3).forEach(event => {
-                const eventDiv = document.createElement('div');
-                eventDiv.className = 'event';
-                eventDiv.innerHTML = `
-                    <div class="event-icon">${event.icon}</div>
-                    <div class="event-time">${event.minute}'</div>
-                    <div class="event-details">
-                        <span class="event-player bangla-text">${event.player}</span>
-                        <span class="event-team bangla-text">(${event.team})</span>
-                    </div>
-                `;
-                container.appendChild(eventDiv);
-            });
-        }
-
-        // Show update indicator
-        function showUpdateIndicator() {
-            const indicator = document.getElementById('updateIndicator');
-            indicator.classList.add('show');
-            setTimeout(() => {
-                indicator.classList.remove('show');
-            }, 2000);
-        }
-
         // Auto-update functionality
         function startAutoUpdate() {
+            // Update match data every 3 seconds for real-time feel
             setInterval(() => {
-                if (!isLoading) {
-                    updateOverlayData();
-                }
-            }, 5000); // Update every 5 seconds
-        }
-
-        // Simulate API call for updates
-        function updateOverlayData() {
-            isLoading = true;
-            showUpdateIndicator();
-            
-            // Simulate API call delay
-            setTimeout(() => {
-                // Simulate random updates
-                const hasUpdates = Math.random() > 0.7;
-                
-                if (hasUpdates) {
-                    // Simulate score change
-                    if (Math.random() > 0.5) {
-                        matchData.teamAScore += Math.random() > 0.5 ? 1 : 0;
-                        matchData.teamBScore += Math.random() > 0.5 ? 1 : 0;
-                    }
-                    
-                    // Simulate time progression
-                    if (matchData.status === 'live') {
-                        matchData.matchTime += Math.floor(Math.random() * 3);
-                    }
-                    
-                    // Update display
-                    updateDisplay(matchData);
-                    previousData = { ...matchData };
-                }
-                
-                isLoading = false;
-            }, 1000);
-        }
-
-        // Smart timer system
-        function startSmartTimer() {
-            if (matchData.status === 'live') {
-                setInterval(() => {
-                    matchData.matchTime += 1;
-                    document.getElementById('matchTime').textContent = matchData.matchTime + "'";
-                }, 60000); // Increment every minute
-            }
-        }
-
-        // Initialize when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeOverlay();
-            startSmartTimer();
-        });
-
-        // Handle visibility change (pause when tab is hidden)
-        document.addEventListener('visibilitychange', function() {
-            if (document.hidden) {
-                // Pause updates when tab is hidden
-                isLoading = true;
-            } else {
-                // Resume updates when tab is visible
-                isLoading = false;
                 updateOverlayData();
+            }, 3000);
+        }
+
+        // Fetch updated match data
+        async function updateOverlayData() {
+            try {
+                const response = await fetch(`/api/overlay-data/${matchId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        updateDisplay(data.match);
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating overlay data:', error);
             }
-        });
+        }
+
+        // Initialize overlay
+        function initializeOverlay() {
+            updateDisplay(matchData);
+            startAutoUpdate();
+        }
+
+        // Start when page loads
+        document.addEventListener('DOMContentLoaded', initializeOverlay);
     </script>
 </body>
 </html>

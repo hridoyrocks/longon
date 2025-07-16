@@ -24,6 +24,7 @@ Route::get('/overlay/{token}', [OverlayController::class, 'show'])->name('overla
 // Public API for overlay data
 Route::get('/api/overlay-data/{match}', [OverlayController::class, 'getOverlayData']);
 
+
 // Special referral registration route
 Route::get('/register', function () {
     $referralCode = request()->get('ref');
