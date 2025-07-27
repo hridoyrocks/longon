@@ -33,6 +33,9 @@ Route::prefix('overlay')->name('overlay.')->group(function () {
     Route::get('/{token}/stream', [OverlayApiController::class, 'streamData'])->name('stream-data');
 });
 
+// Overlay data endpoint (for real-time updates)
+Route::get('/overlay-data/{match}', [OverlayApiController::class, 'getData'])->name('overlay.data');
+
 // Authentication API
 Route::prefix('auth')->name('auth.')->group(function () {
     Route::post('/register', [AuthController::class, 'register'])->name('register');

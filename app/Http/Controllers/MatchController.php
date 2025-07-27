@@ -37,6 +37,7 @@ class MatchController extends Controller
         $request->validate([
             'team_a' => 'required|string|max:255',
             'team_b' => 'required|string|max:255',
+            'tournament_name' => 'nullable|string|max:255',
         ]);
 
         $user = auth()->user();
@@ -53,6 +54,7 @@ class MatchController extends Controller
             'user_id' => $user->id,
             'team_a' => $request->team_a,
             'team_b' => $request->team_b,
+            'tournament_name' => $request->tournament_name,
             'is_premium' => $user->credits_balance > 0,
         ]);
 
@@ -235,6 +237,93 @@ class MatchController extends Controller
         return response()->json([
             'overlay_url' => $overlayUrl,
             'success' => true
+        ]);
+    }
+    
+    public function updateTieBreaker(Request $request, FootballMatch $match)
+    {
+        // Check if user owns this match
+        if ($match->user_id !== auth()->id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'is_tie_breaker' => 'required|boolean',
+            'tie_breaker_data' => 'nullable|array',
+        ]);
+
+        $match->update([
+            'is_tie_breaker' => $request->is_tie_breaker,
+            'tie_breaker_data' => $request->tie_breaker_data,
+        ]);
+
+        // Fire the event to broadcast
+        event(new MatchUpdated($match, 'tie_breaker'));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tie-breaker data updated and broadcasted'
+        ]);
+    }
+    
+    public function updateSettings(Request $request, FootballMatch $match)
+    {
+        // Check if user owns this match
+        if ($match->user_id !== auth()->id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'penalty_shootout_enabled' => 'nullable|boolean',
+        ]);
+
+        $updateData = [];
+        
+        if ($request->has('penalty_shootout_enabled')) {
+            $updateData['penalty_shootout_enabled'] = $request->penalty_shootout_enabled;
+        }
+
+        $match->update($updateData);
+        
+        // Broadcast the update to overlay
+        event(new MatchUpdated($match, 'settings'));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Settings updated successfully'
+        ]);
+    }
+    
+    public function updatePenalty(Request $request, FootballMatch $match)
+    {
+        // Check if user owns this match
+        if ($match->user_id !== auth()->id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'tie_breaker_data' => 'required|array',
+            'tie_breaker_data.team_a' => 'required|array',
+            'tie_breaker_data.team_b' => 'required|array',
+            'tie_breaker_data.team_a.goals' => 'required|integer|min:0',
+            'tie_breaker_data.team_b.goals' => 'required|integer|min:0',
+        ]);
+
+        // Update tie breaker data
+        $match->update([
+            'tie_breaker_data' => $request->tie_breaker_data
+        ]);
+        
+        // Reload to ensure we have the latest data
+        $match->refresh();
+        
+        // Broadcast the update to overlay with penalty update type
+        event(new MatchUpdated($match, 'penalty'));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Penalty data updated and broadcasted',
+            'tie_breaker_data' => $match->tie_breaker_data
         ]);
     }
 }

@@ -73,4 +73,45 @@ class OverlayApiController extends Controller
             'message' => 'View tracked successfully'
         ]);
     }
+
+    public function getData($matchId): JsonResponse
+    {
+        $match = \App\Models\FootballMatch::with('events')->find($matchId);
+
+        if (!$match) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Match not found'
+            ], 404);
+        }
+
+        $events = $match->events->map(function ($event) use ($match) {
+            return [
+                'id' => $event->id,
+                'event_type' => $event->event_type,
+                'team' => $event->team,
+                'player' => $event->player,
+                'minute' => $event->minute,
+                'description' => $event->description,
+                'team_name' => $event->team === 'team_a' ? $match->team_a : $match->team_b,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'match' => [
+                'id' => $match->id,
+                'teamA' => $match->team_a,
+                'teamB' => $match->team_b,
+                'teamAScore' => $match->team_a_score,
+                'teamBScore' => $match->team_b_score,
+                'matchTimeMinutes' => floor($match->match_time),
+                'matchTimeSeconds' => ($match->match_time * 60) % 60,
+                'status' => $match->status,
+                'events' => $events,
+                'last_updated' => $match->updated_at->timestamp,
+            ],
+            'timestamp' => now()->timestamp
+        ]);
+    }
 }

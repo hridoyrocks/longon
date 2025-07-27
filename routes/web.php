@@ -8,6 +8,7 @@ use App\Http\Controllers\OverlayController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ResellerController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PlayerController;
 use Illuminate\Support\Facades\Route;
 
 // ===== PUBLIC ROUTES =====
@@ -45,9 +46,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{match}/update-time', [MatchController::class, 'updateTime'])->name('update-time');
         Route::post('/{match}/update-status', [MatchController::class, 'updateStatus'])->name('update-status');
         Route::post('/{match}/add-event', [MatchController::class, 'addEvent'])->name('add-event');
+        Route::post('/{match}/update-tiebreaker', [MatchController::class, 'updateTieBreaker'])->name('update-tiebreaker');
+        Route::post('/{match}/update-settings', [MatchController::class, 'updateSettings'])->name('update-settings');
+        Route::post('/{match}/update-penalty', [MatchController::class, 'updatePenalty'])->name('update-penalty');
         
         // Overlay Management
         Route::get('/{match}/generate-overlay-link', [MatchController::class, 'generateOverlayLink'])->name('generate-overlay-link');
+        
+        // Player Management
+        Route::get('/{match}/players', [PlayerController::class, 'index'])->name('players.index');
+        Route::post('/{match}/players', [PlayerController::class, 'store'])->name('players.store');
+        Route::put('/{match}/players/{player}', [PlayerController::class, 'update'])->name('players.update');
+        Route::delete('/{match}/players/{player}', [PlayerController::class, 'destroy'])->name('players.destroy');
+        Route::post('/{match}/toggle-player-list', [PlayerController::class, 'togglePlayerList'])->name('toggle-player-list');
     });
     
     // Credit Management

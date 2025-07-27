@@ -11,10 +11,10 @@ use Carbon\Carbon;
 
 class OverlayController extends Controller
 {
-    public function show($token)
+    public function show($token, Request $request)
     {
         $overlayToken = OverlayToken::where('token', $token)
-            ->with('match.events')
+            ->with(['match.events', 'match.homePlayers', 'match.awayPlayers'])
             ->first();
 
         if (!$overlayToken || $overlayToken->isExpired()) {
@@ -23,30 +23,49 @@ class OverlayController extends Controller
 
         $match = $overlayToken->match;
         $showWatermark = !$match->is_premium;
+        
+        // Check if events ticker should be shown
+        $showEventsTicker = $request->has('events') && $request->get('events') == '1';
 
         // Get recent events
         $events = $match->events()
             ->latest()
             ->limit(5)
-            ->get()
-            ->map(function($event) use ($match) {
+            ->get();
+            
+        $eventsData = [];
+        if ($events) {
+            $eventsData = $events->map(function($event) use ($match) {
                 return [
-                    'minute' => $event->minute,
-                    'type' => $event->event_type,
+                    'minute' => $event->minute ?? 0,
+                    'type' => $event->event_type ?? '',
                     'player' => $event->player ?: 'Unknown',
                     'team' => $event->team === 'team_a' ? $match->team_a : $match->team_b,
-                    'timestamp' => $event->created_at->timestamp
+                    'timestamp' => $event->created_at ? $event->created_at->timestamp : now()->timestamp
                 ];
-            });
+            })->toArray();
+        }
 
-        return view('overlay.show', compact('match', 'showWatermark', 'overlayToken', 'events'));
+        // Manually load players to ensure they are loaded
+        $homePlayers = $match->players()->wherePivot('team', 'home')->get();
+        $awayPlayers = $match->players()->wherePivot('team', 'away')->get();
+        
+        return view('overlay.show', [
+            'match' => $match,
+            'showWatermark' => $showWatermark,
+            'overlayToken' => $overlayToken,
+            'events' => $eventsData,
+            'showEventsTicker' => $showEventsTicker,
+            'homePlayers' => $homePlayers,
+            'awayPlayers' => $awayPlayers
+        ]);
     }
 
     public function getOverlayData($matchId)
     {
         $match = FootballMatch::with(['events' => function($query) {
             $query->latest()->limit(10);
-        }, 'analytics'])->find($matchId);
+        }, 'analytics', 'homePlayers', 'awayPlayers'])->find($matchId);
         
         if (!$match) {
             return response()->json(['success' => false, 'message' => 'Match not found'], 404);
@@ -83,7 +102,14 @@ class OverlayController extends Controller
                 'started_at' => $match->started_at,
                 'is_premium' => $match->is_premium,
                 'last_updated' => $match->updated_at->timestamp,
-                'events' => $events
+                'events' => $events,
+                'penaltyShootoutEnabled' => $match->penalty_shootout_enabled,
+                'isTieBreaker' => $match->is_tie_breaker,
+                'tieBreakerData' => $match->tie_breaker_data,
+                'tournamentName' => $match->tournament_name,
+                'showPlayerList' => $match->show_player_list,
+                'homePlayers' => $match->homePlayers,
+                'awayPlayers' => $match->awayPlayers
             ],
             'server_time' => now()->timestamp
         ]);

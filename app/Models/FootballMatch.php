@@ -13,13 +13,18 @@ class FootballMatch extends Model
     protected $fillable = [
         'user_id', 'team_a', 'team_b', 'team_a_score', 'team_b_score',
         'status', 'match_time', 'is_premium', 'overlay_settings',
-        'started_at', 'finished_at'
+        'started_at', 'finished_at', 'is_tie_breaker', 'tie_breaker_data',
+        'penalty_shootout_enabled', 'tournament_name', 'show_player_list'
     ];
 
     protected $casts = [
         'overlay_settings' => 'array',
+        'tie_breaker_data' => 'array',
         'started_at' => 'datetime',
         'finished_at' => 'datetime',
+        'is_tie_breaker' => 'boolean',
+        'penalty_shootout_enabled' => 'boolean',
+        'show_player_list' => 'boolean',
     ];
 
     public function user()
@@ -55,5 +60,22 @@ class FootballMatch extends Model
             return $this->team_b;
         }
         return 'Draw';
+    }
+
+    public function players()
+    {
+        return $this->belongsToMany(\App\Models\Player::class, 'match_players', 'match_id', 'player_id')
+                    ->withPivot('team', 'is_starting_11', 'is_substitute')
+                    ->withTimestamps();
+    }
+
+    public function homePlayers()
+    {
+        return $this->players()->wherePivot('team', 'home');
+    }
+
+    public function awayPlayers()
+    {
+        return $this->players()->wherePivot('team', 'away');
     }
 }
