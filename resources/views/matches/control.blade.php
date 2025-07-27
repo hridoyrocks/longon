@@ -54,39 +54,44 @@
                 <div class="card mb-6">
                     <h2 class="text-xl font-semibold mb-4 bangla-text">টাইমার কন্ট্রোল</h2>
                     
-                    <!-- Quick Timer Buttons -->
-                    <div class="grid grid-cols-4 gap-2 mb-4">
-                        <button onclick="setQuickTime(0)" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded text-sm font-medium">0:00</button>
-                        <button onclick="setQuickTime(15)" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded text-sm font-medium">15:00</button>
-                        <button onclick="setQuickTime(30)" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded text-sm font-medium">30:00</button>
-                        <button onclick="setQuickTime(45)" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded text-sm font-medium">45:00</button>
-                        <button onclick="addExtraTime(1)" class="bg-yellow-200 hover:bg-yellow-300 px-3 py-2 rounded text-sm font-medium">45+1</button>
-                        <button onclick="addExtraTime(2)" class="bg-yellow-200 hover:bg-yellow-300 px-3 py-2 rounded text-sm font-medium">45+2</button>
-                        <button onclick="setQuickTime(60)" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded text-sm font-medium">60:00</button>
-                        <button onclick="setQuickTime(90)" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded text-sm font-medium">90:00</button>
+                    <!-- Timer Display -->
+                    <div class="text-center mb-4">
+                        <div class="text-5xl font-mono bg-gray-900 text-white px-8 py-4 rounded-lg inline-block" id="match_time_display">00:00</div>
                     </div>
-
-                    <!-- Manual Time Input -->
-                    <div class="flex items-center space-x-2 mb-4">
-                        <input type="number" id="manual_minutes" placeholder="মিনিট" class="w-20 border-gray-300 rounded-md" min="0" max="120" value="0">
-                        <span class="text-xl">:</span>
-                        <input type="number" id="manual_seconds" placeholder="সেকেন্ড" class="w-20 border-gray-300 rounded-md" min="0" max="59" value="0">
-                        <button onclick="setManualTime()" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                            <span class="bangla-text">সেট করুন</span>
-                        </button>
-                    </div>
-
+                    
                     <!-- Timer Control Buttons -->
-                    <div class="flex items-center space-x-4">
-                        <button onclick="startTimer()" id="start_btn" class="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600">
+                    <div class="flex justify-center items-center space-x-4 mb-4">
+                        <button onclick="startTimer()" id="start_btn" class="bg-green-500 text-white px-8 py-3 rounded-lg hover:bg-green-600 text-lg transition-all">
                             <span class="bangla-text">▶ শুরু</span>
                         </button>
-                        <button onclick="pauseTimer()" id="pause_btn" class="bg-yellow-500 text-white px-6 py-2 rounded hover:bg-yellow-600" style="display:none;">
+                        <button onclick="pauseTimer()" id="pause_btn" class="bg-yellow-500 text-white px-8 py-3 rounded-lg hover:bg-yellow-600 text-lg transition-all" style="display:none;">
                             <span class="bangla-text">⏸ পজ</span>
                         </button>
-                        <button onclick="resetTimer()" class="bg-red-500 text-white px-6 py-2 rounded hover:bg-red-600">
+                        <button onclick="resetTimer()" class="bg-red-500 text-white px-6 py-3 rounded-lg hover:bg-red-600">
                             <span class="bangla-text">⏹ রিসেট</span>
                         </button>
+                    </div>
+                    
+                    <!-- Extra Time Buttons -->
+                    <div class="text-center mb-3">
+                        <p class="text-sm text-gray-600 mb-2 bangla-text">এক্সট্রা টাইম:</p>
+                        <div class="flex justify-center space-x-2">
+                            <button onclick="addExtraTime(1)" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">+1</button>
+                            <button onclick="addExtraTime(2)" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">+2</button>
+                            <button onclick="addExtraTime(3)" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">+3</button>
+                            <button onclick="addExtraTime(5)" class="bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600">+5</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Time Set -->
+                    <div class="text-center">
+                        <p class="text-sm text-gray-600 mb-2 bangla-text">দ্রুত সময় সেট:</p>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button onclick="setQuickTime(0)" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded text-sm">0:00</button>
+                            <button onclick="setQuickTime(15)" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded text-sm">15:00</button>
+                            <button onclick="setQuickTime(30)" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded text-sm">30:00</button>
+                            <button onclick="setQuickTime(45)" class="bg-gray-200 hover:bg-gray-300 px-3 py-2 rounded text-sm">45:00</button>
+                        </div>
                     </div>
                 </div>
 
@@ -525,9 +530,6 @@
         // Global variables
         let matchId = {{ $match->id }};
         let timerInterval = null;
-        let currentMinutes = 0;
-        let currentSeconds = 0;
-        let isTimerRunning = false;
         let pusher = null;
         let channel = null;
         
@@ -541,9 +543,8 @@
 
         // Initialize timer from saved match time
         window.onload = function() {
-            currentMinutes = {{ floor($match->match_time) }};
-            currentSeconds = {{ ($match->match_time * 60) % 60 }};
-            updateTimerDisplay();
+            // Initialize professional timer
+            initTimer();
             
             // Initialize Pusher
             initializePusher();
@@ -606,39 +607,18 @@
                     checkTieBreakerStatus();
                 }
             @endif
+            
+            // Remove auto-sync - only save when timer state changes
         }
 
         // Auto-update event minute field flag
         let autoUpdateEventTime = true;
         
-        // Timer Functions
-        function updateTimerDisplay() {
-            const display = document.getElementById('match_time_display');
-            const minutes = currentMinutes.toString().padStart(2, '0');
-            const seconds = currentSeconds.toString().padStart(2, '0');
-            display.textContent = `${minutes}:${seconds}`;
-            
-            // Update manual inputs
-            document.getElementById('manual_minutes').value = currentMinutes;
-            document.getElementById('manual_seconds').value = currentSeconds;
-            
-            // Auto-update event minute field if enabled
-            if (autoUpdateEventTime) {
-                updateEventMinuteField();
-            }
-        }
-        
-        // Update event minute field
-        function updateEventMinuteField() {
-            const eventMinuteInput = document.getElementById('event_minute');
-            if (eventMinuteInput && !eventMinuteInput.matches(':focus')) {
-                eventMinuteInput.value = currentMinutes;
-            }
-        }
+
         
         // Set current time in event manually
         function setCurrentTimeInEvent() {
-            document.getElementById('event_minute').value = currentMinutes;
+            document.getElementById('event_minute').value = timerState.minutes;
             // Flash effect to indicate update
             const input = document.getElementById('event_minute');
             input.style.backgroundColor = '#3b82f6';
@@ -649,107 +629,176 @@
             }, 300);
         }
 
-        function startTimer() {
-            if (!isTimerRunning) {
-                isTimerRunning = true;
+        // Professional Timer System with Real-time Sync
+        let timerState = {
+            minutes: 0,
+            seconds: 0,
+            isRunning: false,
+            interval: null,
+            lastSync: Date.now()
+        };
+        
+        // Initialize timer
+        function initTimer() {
+            // Get saved timer state from server
+            fetch(`/matches/${matchId}/get-timer-state`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        timerState.minutes = Math.floor(data.minutes || 0);
+                        timerState.seconds = Math.floor(data.seconds || 0);
+                        timerState.isRunning = data.isRunning || false;
+                        updateTimerDisplay();
+                        
+                        if (timerState.isRunning) {
+                            startTimer(false); // Don't broadcast on init
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading timer state:', error);
+                });
+        }
+        
+        // Update timer display
+        function updateTimerDisplay() {
+            const display = document.getElementById('match_time_display');
+            const minutes = timerState.minutes.toString().padStart(2, '0');
+            const seconds = timerState.seconds.toString().padStart(2, '0');
+            display.textContent = `${minutes}:${seconds}`;
+            
+            // Update event minute field if enabled
+            if (autoUpdateEventTime) {
+                updateEventMinuteField();
+            }
+        }
+        
+        // Start timer with broadcast
+        function startTimer(broadcast = true) {
+            if (!timerState.isRunning) {
+                timerState.isRunning = true;
                 document.getElementById('start_btn').style.display = 'none';
                 document.getElementById('pause_btn').style.display = 'inline-block';
                 
-                timerInterval = setInterval(() => {
-                    currentSeconds++;
-                    if (currentSeconds >= 60) {
-                        currentSeconds = 0;
-                        currentMinutes++;
+                // Clear any existing interval
+                if (timerState.interval) {
+                    clearInterval(timerState.interval);
+                }
+                
+                // Start counting
+                timerState.interval = setInterval(() => {
+                    timerState.seconds++;
+                    if (timerState.seconds >= 60) {
+                        timerState.seconds = 0;
+                        timerState.minutes++;
                     }
                     updateTimerDisplay();
                     
-                    // Auto-save every 10 seconds
-                    if (currentSeconds % 10 === 0) {
-                        saveTime();
+                    // Sync every 10 seconds
+                    if (timerState.seconds % 10 === 0) {
+                        syncTimer();
                     }
                 }, 1000);
+                
+                // Broadcast if needed
+                if (broadcast) {
+                    broadcastTimerState('start');
+                }
             }
         }
-
-        function pauseTimer() {
-            if (isTimerRunning) {
-                isTimerRunning = false;
-                clearInterval(timerInterval);
+        
+        // Pause timer with broadcast
+        function pauseTimer(broadcast = true) {
+            if (timerState.isRunning) {
+                timerState.isRunning = false;
+                if (timerState.interval) {
+                    clearInterval(timerState.interval);
+                    timerState.interval = null;
+                }
                 document.getElementById('start_btn').style.display = 'inline-block';
                 document.getElementById('pause_btn').style.display = 'none';
                 
-                // Save time when paused
-                saveTime();
+                // Broadcast if needed
+                if (broadcast) {
+                    broadcastTimerState('pause');
+                }
             }
         }
-
+        
+        // Reset timer
         function resetTimer() {
-            pauseTimer();
-            currentMinutes = 0;
-            currentSeconds = 0;
+            pauseTimer(false);
+            timerState.minutes = 0;
+            timerState.seconds = 0;
             updateTimerDisplay();
-            saveTime();
+            broadcastTimerState('reset');
         }
-
+        
+        // Set quick time
         function setQuickTime(minutes) {
-            currentMinutes = minutes;
-            currentSeconds = 0;
+            timerState.minutes = minutes;
+            timerState.seconds = 0;
             updateTimerDisplay();
-            saveTime();
+            broadcastTimerState('set');
         }
-
-        function addExtraTime(extraMinutes) {
-            currentMinutes = 45;
-            currentSeconds = 0;
-            // Add extra time visual indicator
+        
+        // Add extra time
+        function addExtraTime(minutes) {
+            timerState.minutes += minutes;
+            updateTimerDisplay();
+            broadcastTimerState('extra');
+            
+            // Visual feedback
             const display = document.getElementById('match_time_display');
-            display.textContent = `45+${extraMinutes}`;
-            
-            // Actually set to 45 + extra
+            display.style.transform = 'scale(1.2)';
+            display.style.backgroundColor = '#7c3aed';
             setTimeout(() => {
-                currentMinutes = 45 + extraMinutes;
-                updateTimerDisplay();
-                saveTime();
-            }, 1000);
+                display.style.transform = 'scale(1)';
+                display.style.backgroundColor = '#111827';
+            }, 500);
         }
-
-        function setManualTime() {
-            const minutes = parseInt(document.getElementById('manual_minutes').value) || 0;
-            const seconds = parseInt(document.getElementById('manual_seconds').value) || 0;
-            
-            if (seconds > 59) {
-                alert('সেকেন্ড 59 এর বেশি হতে পারবে না');
-                return;
-            }
-            
-            currentMinutes = minutes;
-            currentSeconds = seconds;
-            updateTimerDisplay();
-            saveTime();
-        }
-
-        function saveTime() {
-            const totalTime = currentMinutes + (currentSeconds / 60);
-            
-            fetch(`/matches/${matchId}/update-time`, {
+        
+        // Broadcast timer state to server and overlay
+        function broadcastTimerState(action) {
+            fetch(`/matches/${matchId}/update-timer`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 },
-                body: JSON.stringify({ 
-                    match_time: totalTime
+                body: JSON.stringify({
+                    minutes: timerState.minutes,
+                    seconds: timerState.seconds,
+                    isRunning: timerState.isRunning,
+                    action: action
                 })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    console.log('Time saved');
+                    console.log('Timer state broadcasted:', action);
                 }
             })
             .catch(error => {
-                console.error('Error saving time:', error);
+                console.error('Error broadcasting timer:', error);
             });
+        }
+        
+        // Sync timer periodically
+        function syncTimer() {
+            // Only sync if running
+            if (timerState.isRunning) {
+                broadcastTimerState('sync');
+            }
+        }
+
+        
+        // Update event minute field
+        function updateEventMinuteField() {
+            const eventMinuteInput = document.getElementById('event_minute');
+            if (eventMinuteInput && !eventMinuteInput.matches(':focus')) {
+                eventMinuteInput.value = timerState.minutes;
+            }
         }
 
         // Score Functions
@@ -833,9 +882,9 @@
                     if (status === 'finished') event.target.classList.add('bg-red-600', 'text-white');
                     
                     // Auto-start timer if status is live
-                    if (status === 'live' && !isTimerRunning) {
+                    if (status === 'live' && !timerState.isRunning) {
                         startTimer();
-                    } else if (status !== 'live' && isTimerRunning) {
+                    } else if (status !== 'live' && timerState.isRunning) {
                         pauseTimer();
                     }
                     
@@ -868,8 +917,11 @@
             
             // Set current time if not specified
             if (!data.minute) {
-                data.minute = currentMinutes;
+                data.minute = timerState.minutes;
             }
+            
+            // Don't let event submission affect timer
+            const wasTimerRunning = timerState.isRunning;
             
             fetch(`/matches/${matchId}/add-event`, {
                 method: 'POST',
@@ -892,7 +944,16 @@
                     updateEventMinuteField();
                     // Add event to list without reload
                     addEventToList(responseData.event);
+                    
+                    // Ensure timer continues if it was running
+                    if (wasTimerRunning && !timerState.isRunning) {
+                        startTimer();
+                    }
                 }
+            })
+            .catch(error => {
+                console.error('Error adding event:', error);
+                showNotification('Error adding event', 'error');
             });
         }
         
@@ -1012,7 +1073,25 @@
 
                 channel.bind('match-updated', function(data) {
                     console.log('Match updated:', data);
-                    handleRealtimeUpdate(data);
+                    // Simple update handling
+                });
+                
+                // Timer specific channel
+                channel.bind('timer-updated', function(data) {
+                    console.log('Timer update received:', data);
+                    if (data.timer && data.source !== 'control-' + matchId) {
+                        // Update timer if from another source
+                        timerState.minutes = data.timer.minutes;
+                        timerState.seconds = data.timer.seconds;
+                        
+                        if (data.timer.action === 'start' && !timerState.isRunning) {
+                            startTimer(false);
+                        } else if (data.timer.action === 'pause' && timerState.isRunning) {
+                            pauseTimer(false);
+                        } else {
+                            updateTimerDisplay();
+                        }
+                    }
                 });
                 
                 channel.bind('event-added', function(data) {
@@ -1023,7 +1102,7 @@
                 });
 
                 pusher.connection.bind('connected', function() {
-                    console.log('Pusher connected successfully');
+                    console.log('Pusher connected');
                     updatePusherStatus('connected');
                 });
 
@@ -1068,11 +1147,31 @@
 
         function handleRealtimeUpdate(data) {
             if (data.match) {
-                // Flash effect
-                document.body.style.backgroundColor = '#e0f2fe';
-                setTimeout(() => {
-                    document.body.style.backgroundColor = '';
-                }, 300);
+                // Only show flash effect for specific updates, not timer updates
+                if (data.updateType === 'score' || data.updateType === 'event') {
+                    document.body.style.backgroundColor = '#e0f2fe';
+                    setTimeout(() => {
+                        document.body.style.backgroundColor = '';
+                    }, 300);
+                }
+                
+                // Don't update timer from broadcasts if we're controlling it locally
+                if (data.updateType === 'time' || data.updateType === 'status') {
+                    // Only sync timer if there's a significant difference
+                    if (data.match.matchTimeMinutes !== undefined && data.match.matchTimeSeconds !== undefined) {
+                        const broadcastMinutes = Math.floor(data.match.matchTimeMinutes || 0);
+                        const broadcastSeconds = Math.floor(data.match.matchTimeSeconds || 0);
+                        const broadcastTotal = broadcastMinutes * 60 + broadcastSeconds;
+                        const localTotal = currentMinutes * 60 + currentSeconds;
+                        
+                        // Only update if difference is more than 3 seconds
+                        if (Math.abs(broadcastTotal - localTotal) > 3) {
+                            currentMinutes = broadcastMinutes;
+                            currentSeconds = broadcastSeconds;
+                            updateTimerDisplay();
+                        }
+                    }
+                }
             }
         }
 
@@ -1169,6 +1268,9 @@
         }
         
         function togglePlayerList() {
+            // Save current time before toggling
+            saveTime();
+            
             fetch(`/matches/${matchId}/toggle-player-list`, {
                 method: 'POST',
                 headers: {
@@ -1204,7 +1306,7 @@
             // Space bar to start/pause timer
             if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'SELECT') {
                 e.preventDefault();
-                if (isTimerRunning) {
+                if (timerState.isRunning) {
                     pauseTimer();
                 } else {
                     startTimer();
@@ -1259,7 +1361,7 @@
         
         // Prevent accidental page refresh
         window.addEventListener('beforeunload', function (e) {
-            if (isTimerRunning) {
+            if (timerState.isRunning) {
                 e.preventDefault();
                 e.returnValue = 'Timer is running. Are you sure you want to leave?';
             }
@@ -1278,7 +1380,7 @@
         
         document.getElementById('event_minute').addEventListener('blur', function() {
             // If field is empty, re-enable auto-update
-            if (this.value === '' || this.value == currentMinutes) {
+            if (this.value === '' || this.value == timerState.minutes) {
                 autoUpdateEventTime = true;
             }
         });
@@ -1383,7 +1485,7 @@
                 event_type: 'tie_breaker_start',
                 team: 'both',
                 player: 'Penalty Shootout Started',
-                minute: currentMinutes
+                minute: timerState.minutes
             });
             
             showNotification('টাই-ব্রেকার শুরু হয়েছে!', 'info');
@@ -1648,7 +1750,7 @@
                     event_type: 'winner_announcement',
                     team: winner,
                     player: `${winnerTeam} (Penalties: ${teamAGoals}-${teamBGoals})`,
-                    minute: currentMinutes,
+                    minute: timerState.minutes,
                     description: `Final Score: ${finalScore}`
                 })
             })
@@ -1761,7 +1863,7 @@
                     event_type: 'winner_announcement',
                     team: winner,
                     player: winnerTeam,
-                    minute: currentMinutes,
+                    minute: timerState.minutes,
                     description: `Final Score: ${finalScore}`
                 })
             })

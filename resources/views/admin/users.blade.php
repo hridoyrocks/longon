@@ -15,12 +15,12 @@
                         <div class="bg-white/60 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
                             <span class="text-sm text-slate-600 bangla-text">মোট: {{ $users->total() }} জন</span>
                         </div>
-                        <button class="btn-primary">
+                        <a href="{{ route('admin.users.create') }}" class="btn-primary">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
                             </svg>
                             <span class="bangla-text">নতুন ব্যবহারকারী</span>
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>

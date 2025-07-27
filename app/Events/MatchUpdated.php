@@ -50,6 +50,7 @@ class MatchUpdated implements ShouldBroadcast
                 'tieBreakerData' => $this->match->tie_breaker_data,
                 'showPlayerList' => $this->match->show_player_list,
                 'tournamentName' => $this->match->tournament_name,
+                'isTimerRunning' => $this->match->is_timer_running ?? false,
                 'last_updated' => $this->match->updated_at->timestamp,
             ],
             'updateType' => $this->updateType,

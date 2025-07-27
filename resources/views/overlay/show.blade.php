@@ -2144,14 +2144,15 @@
             teamAScore: {{ $match->team_a_score }},
             teamBScore: {{ $match->team_b_score }},
             matchTimeMinutes: {{ floor($match->match_time) }},
-            matchTimeSeconds: {{ ($match->match_time * 60) % 60 }},
+            matchTimeSeconds: {{ round(($match->match_time * 60) % 60) }},
             status: '{{ $match->status }}',
             events: {!! json_encode($events ?? []) !!},
             isTieBreaker: {{ $match->is_tie_breaker ? 'true' : 'false' }},
             tieBreakerData: {!! json_encode($match->tie_breaker_data ?? null) !!},
             penaltyShootoutEnabled: {{ $match->penalty_shootout_enabled ? 'true' : 'false' }},
             showPlayerList: {{ $match->show_player_list ? 'true' : 'false' }},
-            tournamentName: '{{ $match->tournament_name }}'
+            tournamentName: '{{ $match->tournament_name }}',
+            isTimerRunning: {{ ($match->is_timer_running ?? false) ? 'true' : 'false' }}
         };
 
         // Configuration
@@ -2168,12 +2169,34 @@
             teamB: matchData.teamBScore
         };
 
+        // Professional Timer with Broadcast Sync
         let timer = {
-            minutes: matchData.matchTimeMinutes,
-            seconds: matchData.matchTimeSeconds,
+            minutes: 0,
+            seconds: 0,
             interval: null,
             isRunning: false
         };
+        
+        // Initialize timer from server
+        function initializeTimer() {
+            fetch(`/api/matches/${matchId}/timer-state`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        timer.minutes = data.minutes || 0;
+                        timer.seconds = data.seconds || 0;
+                        timer.isRunning = data.isRunning || false;
+                        updateTimerDisplay();
+                        
+                        if (timer.isRunning && matchData.status === 'live') {
+                            startTimer();
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading timer state:', error);
+                });
+        }
 
         // Enhanced Goal Celebration Functions
         function createFootballs() {
@@ -2268,7 +2291,7 @@
             if (timer.interval) clearInterval(timer.interval);
             
             timer.interval = setInterval(() => {
-                if (timer.isRunning && matchData.status === 'live') {
+                if (timer.isRunning) {
                     timer.seconds++;
                     if (timer.seconds >= 60) {
                         timer.seconds = 0;
@@ -2287,8 +2310,9 @@
         }
 
         function setTimer(minutes, seconds) {
-            timer.minutes = minutes;
-            timer.seconds = seconds;
+            timer.minutes = Math.floor(minutes);
+            timer.seconds = Math.floor(seconds);
+            timer.lastUpdate = Date.now();
             updateTimerDisplay();
         }
 
@@ -2324,8 +2348,8 @@
         
         // Update Display Function
         function updateDisplay(data) {
-            // Flash scoreboard on update (but not for settings changes)
-            if (data.updateType !== 'settings') {
+            // Don't flash scoreboard for every update
+            if (data.updateType === 'goal_team_a' || data.updateType === 'goal_team_b') {
                 const scoreboard = document.getElementById('scoreboard');
                 scoreboard.classList.add('update-flash');
                 setTimeout(() => {
@@ -2336,7 +2360,7 @@
             document.getElementById('teamAName').textContent = data.teamA;
             document.getElementById('teamBName').textContent = data.teamB;
             
-            // Check for goals (only if it's a score update)
+            // Check for goals
             if (data.updateType === 'goal_team_a' || (data.updateType === 'score' && data.teamAScore > previousScores.teamA)) {
                 showGoalCelebration('teamA');
                 document.getElementById('teamAScore').classList.add('goal-scored');
@@ -2359,9 +2383,25 @@
             previousScores.teamA = data.teamAScore;
             previousScores.teamB = data.teamBScore;
             
-            // Update timer
-            if (data.matchTimeMinutes !== undefined && data.matchTimeSeconds !== undefined) {
-                setTimer(data.matchTimeMinutes, data.matchTimeSeconds);
+            // Don't update timer for score changes - only for time updates
+            if (data.updateType === 'time' || data.updateType === 'status') {
+                // Update timer
+                if (data.matchTimeMinutes !== undefined && data.matchTimeSeconds !== undefined) {
+                    setTimer(data.matchTimeMinutes, data.matchTimeSeconds);
+                }
+                
+                // Update timer running state
+                if (data.isTimerRunning !== undefined) {
+                    timer.isRunning = data.isTimerRunning;
+                    if (timer.isRunning && matchData.status === 'live') {
+                        startTimer();
+                    } else {
+                        if (timer.interval) {
+                            clearInterval(timer.interval);
+                            timer.interval = null;
+                        }
+                    }
+                }
             }
             
             // Update live indicator
@@ -2577,7 +2617,11 @@
                 pusher = new Pusher('8ccf5d4c4bf78fcec3c9', {
                     cluster: 'ap2',
                     encrypted: true,
-                    forceTLS: true
+                    forceTLS: true,
+                    activityTimeout: 10000,
+                    pongTimeout: 5000,
+                    unavailableTimeout: 10000,
+                    enabledTransports: ['ws', 'wss']
                 });
 
                 channel = pusher.subscribe('match.' + matchId);
@@ -2585,14 +2629,58 @@
                 channel.bind('match-updated', function(data) {
                     console.log('Match updated via Pusher:', data);
                     if (data.match) {
-                        // Merge with existing data to preserve all fields
-                        matchData = { ...matchData, ...data.match };
                         // Add updateType from the broadcast
-                        matchData.updateType = data.updateType;
-                        updateDisplay(matchData);
+                        const updateType = data.updateType;
+                        
+                        // For score updates, only update score fields
+                        if (updateType === 'score' || updateType === 'goal_team_a' || updateType === 'goal_team_b') {
+                            matchData.teamAScore = data.match.teamAScore;
+                            matchData.teamBScore = data.match.teamBScore;
+                            matchData.updateType = updateType;
+                            
+                            // Update display without touching timer
+                            updateDisplay(matchData);
+                        } 
+                        // For event updates, don't touch timer at all
+                        else if (updateType === 'event' || updateType === 'event-added') {
+                            // Just update the match data without timer
+                            matchData.events = data.match.events || matchData.events;
+                            // Don't call updateDisplay for events
+                        }
+                        else {
+                            // For other updates, merge all data
+                            matchData = { ...matchData, ...data.match };
+                            matchData.updateType = updateType;
+                            
+                            // Special handling for timer updates
+                            if (updateType === 'time' || updateType === 'status') {
+                                // Update timer state directly from broadcast
+                                if (data.match.matchTimeMinutes !== undefined && data.match.matchTimeSeconds !== undefined) {
+                                    const newMinutes = Math.floor(data.match.matchTimeMinutes);
+                                    const newSeconds = Math.floor(data.match.matchTimeSeconds);
+                                    
+                                    // Only update if there's a significant difference
+                                    const currentTotalSeconds = timer.minutes * 60 + timer.seconds;
+                                    const newTotalSeconds = newMinutes * 60 + newSeconds;
+                                    
+                                    if (Math.abs(currentTotalSeconds - newTotalSeconds) > 2) {
+                                        timer.minutes = newMinutes;
+                                        timer.seconds = newSeconds;
+                                        timer.lastUpdate = Date.now();
+                                        updateTimerDisplay();
+                                    }
+                                }
+                                
+                                if (data.match.isTimerRunning !== undefined) {
+                                    timer.isRunning = data.match.isTimerRunning;
+                                }
+                            }
+                            
+                            updateDisplay(matchData);
+                        }
                         
                         // Special handling for penalty updates
-                        if (data.updateType === 'penalty' && data.match.tieBreakerData) {
+                        if (updateType === 'penalty' && data.match.tieBreakerData) {
                             console.log('Penalty update received:', data.match.tieBreakerData);
                             // Force update penalty counter
                             updatePenaltyCounter(data.match);
@@ -2600,17 +2688,50 @@
                     }
                 });
 
+                // Handle timer-specific updates
+                channel.bind('timer-updated', function(data) {
+                    console.log('Timer update received:', data);
+                    if (data.timer) {
+                        timer.minutes = data.timer.minutes;
+                        timer.seconds = data.timer.seconds;
+                        
+                        switch(data.timer.action) {
+                            case 'start':
+                                if (!timer.isRunning && matchData.status === 'live') {
+                                    timer.isRunning = true;
+                                    startTimer();
+                                }
+                                break;
+                            case 'pause':
+                                if (timer.isRunning) {
+                                    timer.isRunning = false;
+                                    if (timer.interval) {
+                                        clearInterval(timer.interval);
+                                        timer.interval = null;
+                                    }
+                                }
+                                updateTimerDisplay();
+                                break;
+                            case 'reset':
+                            case 'set':
+                            case 'extra':
+                            case 'sync':
+                                updateTimerDisplay();
+                                break;
+                        }
+                    }
+                });
+                
                 channel.bind('event-added', function(data) {
-                    console.log('Event added via Pusher:', data);
                     if (data.event) {
-                        // Add to events list
+                        // Add to events list without affecting timer
                         if (matchData.events) {
                             matchData.events.push(data.event);
                             if (window.showEventsTicker) {
                                 updateEventsTicker(matchData.events);
                             }
                         }
-                        // Show lower third
+                        // Show lower third without affecting timer
                         showEventLowerThird(data.event);
                     }
                 });
@@ -2644,13 +2765,14 @@
             window.showEventsTicker = !window.showEventsTicker;
         }
 
-        // Fallback polling mechanism
+        // Fallback polling mechanism - only when disconnected
         function startPolling() {
             pollingInterval = setInterval(async () => {
                 if (!isConnected) {
+                    console.log('Pusher disconnected, using fallback polling');
                     await fetchMatchData();
                 }
-            }, 3000);
+            }, 10000); // Check every 10 seconds if disconnected
         }
 
         // Real-time data fetching (fallback)
@@ -2661,7 +2783,34 @@
                     const data = await response.json();
                     if (data.success && data.match) {
                         console.log('Fetched match data:', data.match);
-                        matchData = { ...matchData, ...data.match };
+                        
+                        // Don't update timer if it's running locally
+                        if (timer.isRunning && timer.interval) {
+                            // Only update non-timer fields
+                            matchData.teamA = data.match.teamA;
+                            matchData.teamB = data.match.teamB;
+                            matchData.teamAScore = data.match.teamAScore;
+                            matchData.teamBScore = data.match.teamBScore;
+                            matchData.status = data.match.status;
+                            matchData.penaltyShootoutEnabled = data.match.penaltyShootoutEnabled;
+                            matchData.isTieBreaker = data.match.isTieBreaker;
+                            matchData.tieBreakerData = data.match.tieBreakerData;
+                            matchData.showPlayerList = data.match.showPlayerList;
+                        } else {
+                            // Update timer state from fetched data only if not running
+                            if (data.match.matchTimeMinutes !== undefined && data.match.matchTimeSeconds !== undefined) {
+                                timer.minutes = Math.floor(data.match.matchTimeMinutes);
+                                timer.seconds = Math.floor(data.match.matchTimeSeconds);
+                                timer.lastUpdate = Date.now();
+                            }
+                            
+                            if (data.match.isTimerRunning !== undefined) {
+                                timer.isRunning = data.match.isTimerRunning;
+                            }
+                            
+                            matchData = { ...matchData, ...data.match };
+                        }
+                        
                         updateDisplay(matchData);
                         // Force update penalty counter
                         updatePenaltyCounter(matchData);
@@ -2676,10 +2825,15 @@
         function initializeOverlay() {
             console.log('Initial match data:', matchData);
             console.log('Show player list:', matchData.showPlayerList);
+            console.log('Timer running:', matchData.isTimerRunning);
             
             updateDisplay(matchData);
             updateTimerDisplay();
-            startTimer();
+            
+            // Start timer only if it was running
+            if (matchData.isTimerRunning && matchData.status === 'live') {
+                startTimer();
+            }
             
             // Initialize penalty counter
             updatePenaltyCounter(matchData);
@@ -2834,6 +2988,10 @@
                 clearInterval(timer.interval);
             }
         });
+        // Initialize overlay after loading all functions
+        updateDisplay(matchData);
+        setupPenaltyDisplay();
+        initializeTimer();
     </script>
 </body>
 </html>

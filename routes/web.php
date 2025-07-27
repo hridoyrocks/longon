@@ -23,6 +23,7 @@ Route::get('/overlay/{token}', [OverlayController::class, 'show'])->name('overla
 // Real-time overlay data API
 Route::get('/api/overlay-data/{match}', [OverlayController::class, 'getOverlayData']);
 Route::post('/api/overlay/{token}/track-view', [OverlayController::class, 'trackViewApi']);
+Route::get('/api/matches/{match}/timer-state', [MatchController::class, 'getTimerStateApi']);
 
 // Authentication Routes
 require __DIR__.'/auth.php';
@@ -49,6 +50,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/{match}/update-tiebreaker', [MatchController::class, 'updateTieBreaker'])->name('update-tiebreaker');
         Route::post('/{match}/update-settings', [MatchController::class, 'updateSettings'])->name('update-settings');
         Route::post('/{match}/update-penalty', [MatchController::class, 'updatePenalty'])->name('update-penalty');
+        
+        // Timer Management
+        Route::post('/{match}/update-timer', [MatchController::class, 'updateTimer'])->name('update-timer');
+        Route::get('/{match}/get-timer-state', [MatchController::class, 'getTimerState'])->name('get-timer-state');
         
         // Overlay Management
         Route::get('/{match}/generate-overlay-link', [MatchController::class, 'generateOverlayLink'])->name('generate-overlay-link');
@@ -106,6 +111,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         // User Management
         Route::get('/users', [AdminController::class, 'users'])->name('users.index');
+        Route::get('/users/create', [AdminController::class, 'createUser'])->name('users.create');
+        Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
+        Route::get('/users/{user}/edit', [AdminController::class, 'editUser'])->name('users.edit');
+        Route::put('/users/{user}', [AdminController::class, 'updateUser'])->name('users.update');
+        Route::delete('/users/{user}', [AdminController::class, 'deleteUser'])->name('users.delete');
         Route::post('/users/{user}/adjust-credits', [AdminController::class, 'adjustCredits'])->name('users.adjust-credits');
         
         // Payment Management

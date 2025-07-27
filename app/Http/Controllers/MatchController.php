@@ -133,18 +133,27 @@ class MatchController extends Controller
 
         $request->validate([
             'match_time' => 'required|numeric|min:0',
+            'is_timer_running' => 'nullable|boolean',
         ]);
 
-        $match->update([
+        $updateData = [
             'match_time' => $request->match_time,
-        ]);
+        ];
+        
+        // Save timer running state if provided
+        if ($request->has('is_timer_running')) {
+            $updateData['is_timer_running'] = $request->is_timer_running;
+        }
+
+        $match->update($updateData);
 
         // Fire the event to broadcast
         event(new MatchUpdated($match, 'time'));
 
         return response()->json([
             'success' => true,
-            'message' => 'Time updated and broadcasted'
+            'message' => 'Time updated and broadcasted',
+            'is_timer_running' => $match->is_timer_running
         ]);
     }
 
@@ -324,6 +333,63 @@ class MatchController extends Controller
             'success' => true,
             'message' => 'Penalty data updated and broadcasted',
             'tie_breaker_data' => $match->tie_breaker_data
+        ]);
+    }
+    
+    public function updateTimer(Request $request, FootballMatch $match)
+    {
+        // Check if user owns this match
+        if ($match->user_id !== auth()->id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $request->validate([
+            'minutes' => 'required|integer|min:0',
+            'seconds' => 'required|integer|min:0|max:59',
+            'isRunning' => 'required|boolean',
+            'action' => 'required|string',
+        ]);
+
+        $match->update([
+            'match_time' => $request->minutes + ($request->seconds / 60),
+            'is_timer_running' => $request->isRunning
+        ]);
+        
+        // Broadcast timer update
+        broadcast(new \App\Events\TimerUpdated($match, [
+            'minutes' => $request->minutes,
+            'seconds' => $request->seconds,
+            'isRunning' => $request->isRunning,
+            'action' => $request->action,
+            'source' => 'control-' . $match->id
+        ]))->toOthers();
+        
+        return response()->json(['success' => true]);
+    }
+
+    public function getTimerState(FootballMatch $match)
+    {
+        // Check if user owns this match
+        if ($match->user_id !== auth()->id()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'minutes' => floor($match->match_time),
+            'seconds' => round(($match->match_time * 60) % 60),
+            'isRunning' => $match->is_timer_running
+        ]);
+    }
+
+    public function getTimerStateApi(FootballMatch $match)
+    {
+        // Public API for overlay
+        return response()->json([
+            'success' => true,
+            'minutes' => floor($match->match_time),
+            'seconds' => round(($match->match_time * 60) % 60),
+            'isRunning' => $match->is_timer_running
         ]);
     }
 }

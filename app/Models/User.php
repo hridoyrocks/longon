@@ -12,7 +12,8 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name', 'email', 'password', 'phone', 'user_type', 'referral_code',
-        'referrer_id', 'business_name', 'monthly_sales_target', 'reseller_settings'
+        'referrer_id', 'business_name', 'monthly_sales_target', 'reseller_settings',
+        'credits_balance', 'is_active', 'email_verified_at', 'reseller_approved_at'
     ];
 
     protected $hidden = [

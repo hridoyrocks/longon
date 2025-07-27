@@ -85,8 +85,11 @@ class OverlayController extends Controller
             ];
         });
 
-        // Calculate smart timer
-        $timerData = $this->calculateSmartTime($match);
+        // Use saved time instead of calculating smart time
+        $timerData = [
+            'minutes' => floor($match->match_time),
+            'seconds' => ($match->match_time * 60) % 60
+        ];
 
         return response()->json([
             'success' => true,
@@ -109,7 +112,8 @@ class OverlayController extends Controller
                 'tournamentName' => $match->tournament_name,
                 'showPlayerList' => $match->show_player_list,
                 'homePlayers' => $match->homePlayers,
-                'awayPlayers' => $match->awayPlayers
+                'awayPlayers' => $match->awayPlayers,
+                'isTimerRunning' => $match->is_timer_running ?? false
             ],
             'server_time' => now()->timestamp
         ]);

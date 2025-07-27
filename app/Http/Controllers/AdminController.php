@@ -57,6 +57,124 @@ class AdminController extends Controller
         $users = User::latest()->paginate(20);
         return view('admin.users', compact('users'));
     }
+    
+    public function createUser()
+    {
+        $this->checkAdminAuth();
+        return view('admin.create-user');
+    }
+    
+    public function storeUser(Request $request)
+    {
+        $this->checkAdminAuth();
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'user_type' => 'required|in:user,reseller,admin',
+            'credits_balance' => 'nullable|integer|min:0',
+            'monthly_sales_target' => 'nullable|integer|min:0',
+            'business_name' => 'nullable|string|max:255',
+        ]);
+        
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'user_type' => $request->user_type,
+            'credits_balance' => $request->credits_balance ?? 0,
+            'monthly_sales_target' => $request->monthly_sales_target ?? 0,
+            'business_name' => $request->business_name,
+            'email_verified_at' => now(),
+        ]);
+        
+        // Generate referral code if reseller
+        if ($request->user_type === 'reseller') {
+            $user->generateReferralCode();
+            $user->update(['reseller_approved_at' => now()]);
+        }
+        
+        // Record initial credit transaction if credits given
+        if ($request->credits_balance > 0) {
+            CreditTransaction::create([
+                'user_id' => $user->id,
+                'credits_used' => $request->credits_balance,
+                'transaction_type' => 'credit',
+                'balance_before' => 0,
+                'balance_after' => $request->credits_balance,
+                'description' => 'Initial credits added by admin',
+            ]);
+        }
+        
+        return redirect()->route('admin.users.index')
+            ->with('success', 'User created successfully');
+    }
+    
+    public function editUser(User $user)
+    {
+        $this->checkAdminAuth();
+        return view('admin.edit-user', compact('user'));
+    }
+    
+    public function updateUser(Request $request, User $user)
+    {
+        $this->checkAdminAuth();
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:8|confirmed',
+            'user_type' => 'required|in:user,reseller,admin',
+            'monthly_sales_target' => 'nullable|integer|min:0',
+            'business_name' => 'nullable|string|max:255',
+            'is_active' => 'required|boolean',
+        ]);
+        
+        $updateData = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'user_type' => $request->user_type,
+            'monthly_sales_target' => $request->monthly_sales_target ?? 0,
+            'business_name' => $request->business_name,
+            'is_active' => $request->is_active,
+        ];
+        
+        if ($request->filled('password')) {
+            $updateData['password'] = Hash::make($request->password);
+        }
+        
+        // If changing to reseller and no referral code
+        if ($request->user_type === 'reseller' && !$user->referral_code) {
+            $user->generateReferralCode();
+            $updateData['reseller_approved_at'] = now();
+        }
+        
+        $user->update($updateData);
+        
+        return redirect()->route('admin.users.index')
+            ->with('success', 'User updated successfully');
+    }
+    
+    public function deleteUser(User $user)
+    {
+        $this->checkAdminAuth();
+        
+        // Prevent deleting admin users
+        if ($user->user_type === 'admin') {
+            return redirect()->back()->with('error', 'Cannot delete admin users');
+        }
+        
+        // Prevent self-deletion
+        if ($user->id === auth()->id()) {
+            return redirect()->back()->with('error', 'Cannot delete your own account');
+        }
+        
+        $user->delete();
+        
+        return redirect()->route('admin.users.index')
+            ->with('success', 'User deleted successfully');
+    }
 
     public function payments()
     {

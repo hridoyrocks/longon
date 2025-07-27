@@ -12,7 +12,7 @@ class FootballMatch extends Model
 
     protected $fillable = [
         'user_id', 'team_a', 'team_b', 'team_a_score', 'team_b_score',
-        'status', 'match_time', 'is_premium', 'overlay_settings',
+        'status', 'match_time', 'is_timer_running', 'is_premium', 'overlay_settings',
         'started_at', 'finished_at', 'is_tie_breaker', 'tie_breaker_data',
         'penalty_shootout_enabled', 'tournament_name', 'show_player_list'
     ];
@@ -23,6 +23,7 @@ class FootballMatch extends Model
         'started_at' => 'datetime',
         'finished_at' => 'datetime',
         'is_tie_breaker' => 'boolean',
+        'is_timer_running' => 'boolean',
         'penalty_shootout_enabled' => 'boolean',
         'show_player_list' => 'boolean',
     ];
